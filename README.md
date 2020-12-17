@@ -41,4 +41,4 @@ HTML files placed in ***docs*** folder: description of functions, chat commands 
 # Main file / Point of entry
 During restart of speedrun ***main.nut*** file will be executed, see the comments in the file to clarify how to work with it
 
-Two ways to (re)start speedrun: chat command ***!restart*** or via bind ***bind b script RestartSpeedrun()***
+Two ways to (re)start speedrun: chat command ***!restart*** or via bind ***bind b "script RestartSpeedrun()"***
