@@ -1,0 +1,221 @@
+<style>
+	.tbl {
+		border:1px solid #686868;
+		border-collapse:collapse;
+		padding:5px;
+	}
+	.tbl th {
+		border:1px solid #686868;
+		padding:5px;
+		background:#686868;
+	}
+	.tbl td {
+		border:1px solid #686868;
+		padding:5px;
+		background:#3A3A3A;
+		color:#B9B7B6;
+	}
+</style>
+
+<body bgcolor="#353535">
+
+<table class="tbl">
+	<caption><span style="color: #FFFFFF;font-size: 1.6em;font-family: sans-serif;">Additional Modules</span></th>
+		<th><span style="color: #000000;">Function</span></th>
+		<th><span style="color: #000000;">Signature</span></th>
+		<th><span style="color: #000000;">Description</span></th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>&nbsp;SkipIntro</td>
+		<td>&nbsp;void SkipIntro()</td>
+		<td>&nbsp;Skip intro, omni</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SwitchAutoSB</td>
+		<td>&nbsp;void SwitchAutoSB(handle <i>player</i>)</td>
+		<td>&nbsp;Toggle auto spitter boost</td>
+	</tr>
+	<tr>
+		<td>&nbsp;ChangeAutoSBFactor</td>
+		<td>&nbsp;void ChangeAutoSBFactor(handle <i>player</i>, float <i>factor</i>)</td>
+		<td>&nbsp;Change multiplier of jump time (AutoSB)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SwitchFillBot</td>
+		<td>&nbsp;void SwitchFillBot(handle <i>player</i>)</td>
+		<td>&nbsp;Toggle fill bot</td>
+	</tr>
+	<tr>
+		<td>&nbsp;ActivateFillBot_OnAdrenalineUse</td>
+		<td>&nbsp;void ActivateFillBot_OnAdrenalineUse(handle <i>player</i>)</td>
+		<td>&nbsp;Enable fill bot after using adrenaline</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SwitchAutoBhop</td>
+		<td>&nbsp;void SwitchAutoBhop(handle <i>player</i>)</td>
+		<td>&nbsp;Toggle auto bunnyhop</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SwitchHostAutoBhop</td>
+		<td>&nbsp;void SwitchHostAutoBhop(handle <i>player</i>)</td>
+		<td>&nbsp;Toggle auto bunnyhop for local player</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SwitchAimbot</td>
+		<td>&nbsp;void SwitchAimbot(handle <i>player</i>)</td>
+		<td>&nbsp;Toggle aimbot (not local player must bind MOUSE1 to +alt2)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SwitchAimbot2</td>
+		<td>&nbsp;void SwitchAimbot2(handle <i>player</i>)</td>
+		<td>&nbsp;Toggle aimbot №2, aims after shooting</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SwitchRageBot</td>
+		<td>&nbsp;void SwitchRageBot(handle <i>player</i>)</td>
+		<td>&nbsp;Toggle ragebot</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SwitchAutoStrafer</td>
+		<td>&nbsp;void SwitchAutoStrafer(handle <i>player</i>)</td>
+		<td>&nbsp;Toggle simple autostrafer</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;EnableAutoBhopForEveryone</td>
+		<td>&nbsp;void EnableAutoBhopForEveryone()</td>
+		<td>&nbsp;Enable auto bunnyhop for all players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;DisableAutoBhopForEveryone</td>
+		<td>&nbsp;void DisableAutoBhopForEveryone()</td>
+		<td>&nbsp;Disable auto bunnyhop for all players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;EnableAimbotForEveryone</td>
+		<td>&nbsp;void EnableAimbotForEveryone()</td>
+		<td>&nbsp;Enable aimbot for all players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;DisableAimbotForEveryone</td>
+		<td>&nbsp;void DisableAimbotForEveryone()</td>
+		<td>&nbsp;Disable aimbot for all players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;EnableAimbot2ForEveryone</td>
+		<td>&nbsp;void EnableAimbot2ForEveryone()</td>
+		<td>&nbsp;Enable aimbot №2 for all players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;DisableAimbot2ForEveryone</td>
+		<td>&nbsp;void DisableAimbot2ForEveryone()</td>
+		<td>&nbsp;Disable aimbot №2 for all players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;EnableRagebotForEveryone</td>
+		<td>&nbsp;void EnableRagebotForEveryone()</td>
+		<td>&nbsp;Enable ragebot for all players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;DisableRagebotForEveryone</td>
+		<td>&nbsp;void DisableRagebotForEveryone()</td>
+		<td>&nbsp;Disable ragebot for all players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;ClientCommand</td>
+		<td>&nbsp;void ClientCommand(handle <i>player</i>, string <i>command</i>)</td>
+		<td>&nbsp;Send client command to player</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SetClientName</td>
+		<td>&nbsp;void SetClientName(handle <i>player</i>, string <i>name</i>)</td>
+		<td>&nbsp;Set name of player</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SetTeam</td>
+		<td>&nbsp;void SetTeam(string <i>survivorName</i>)</td>
+		<td>&nbsp;Fill team with fake clients and take over of chosen bot</td>
+	</tr>
+	<tr>
+		<td>&nbsp;CallVote</td>
+		<td>&nbsp;void CallVote(handle <i>caller</i>, string <i>difficulty</i>)</td>
+		<td>&nbsp;Call vote to change difficulty</td>
+	</tr>
+	<tr>
+		<td>&nbsp;PlayerReplace</td>
+		<td>&nbsp;void PlayerReplace(handle <i>playerA</i>, handle <i>playerB</i>)</td>
+		<td>&nbsp;Swap players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;AutoKick</td>
+		<td>&nbsp;void AutoKick(handle <i>caller</i>, handle <i>target</i>, bool <i>bRootKey</i> = false)</td>
+		<td>&nbsp;Auto kick of specified player</td>
+	</tr>
+	<tr>
+		<td>&nbsp;ST_Idle</td>
+		<td>&nbsp;void ST_Idle(handle <i>player</i>, bool <i>bMode</i> = false)</td>
+		<td>&nbsp;Go idle or take over a bot ('false' idle, otherwise take over)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;ST_PlayerReplace</td>
+		<td>&nbsp;void ST_PlayerReplace(handle <i>playerA</i>, handle <i>playerB</i>)</td>
+		<td>&nbsp;Swap players</td>
+	</tr>
+	<tr>
+		<td>&nbsp;ST_MR</td>
+		<td>&nbsp;void ST_MR(handle <i>player</i> = null, int <i>mode</i> = 0, string <i>fileName</i> = null, bool <i>bNoTeleport</i> = false)</td>
+		<td>&nbsp;Simplified using of movement reader</td>
+	</tr>
+	<tr>
+		<td>&nbsp;ST_MRStop</td>
+		<td>&nbsp;void ST_MRStop(handle <i>player</i> = null)</td>
+		<td>&nbsp;Stop movement reader</td>
+	</tr>
+	<tr>
+		<td>&nbsp;GetOwner</td>
+		<td>&nbsp;handle GetOwner(handle/string/integer <i>player</i>)</td>
+		<td>&nbsp;Get owner of bot</td>
+	</tr>
+	<tr>
+		<td>&nbsp;IsFakeClient</td>
+		<td>&nbsp;bool IsFakeClient(handle <i>player</i>)</td>
+		<td>&nbsp;Is player a fake client</td>
+	</tr>
+	<tr>
+		<td>&nbsp;IsHuman</td>
+		<td>&nbsp;bool IsHuman(handle <i>player</i>)</td>
+		<td>&nbsp;Is player not a bot/fake client</td>
+	</tr>
+	<tr>
+		<td>&nbsp;IsPlayer</td>
+		<td>&nbsp;bool IsPlayer(handle <i>player</i>)</td>
+		<td>&nbsp;Is entity a player</td>
+	</tr>
+	<tbody>
+</table>

@@ -1,0 +1,186 @@
+<style>
+	.tbl {
+		border:1px solid #686868;
+		border-collapse:collapse;
+		padding:5px;
+	}
+	.tbl th {
+		border:1px solid #686868;
+		padding:5px;
+		background:#686868;
+	}
+	.tbl td {
+		border:1px solid #686868;
+		padding:5px;
+		background:#3A3A3A;
+		color:#B9B7B6;
+	}
+</style>
+
+<body bgcolor="#353535">
+
+<table class="tbl">
+	<caption><span style="color: #FFFFFF;font-size: 1.25em;font-family: sans-serif;">Chat Commands</span></th>
+		<th><span style="color: #000000;">Command</span></th>
+		<th><span style="color: #000000;">Description</span></th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>&nbsp;!rst</td>
+		<td>&nbsp;Restart the game round</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!restart</td>
+		<td>&nbsp;(Re)start speedrun</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!changeon</td>
+		<td>&nbsp;Enable change level</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!nextlevel</td>
+		<td>&nbsp;Change level to the next map</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!transit</td>
+		<td>&nbsp;Get coordinates on the next level</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!hud</td>
+		<td>&nbsp;Toggle timer</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!fdmg</td>
+		<td>&nbsp;Toggle fall damage notification</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!pick</td>
+		<td>&nbsp;Get an action function for the entity you're looking</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!crds</td>
+		<td>&nbsp;Get your position, angles and velocity</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!zdump</td>
+		<td>&nbsp;Dump all infected to 'zdump.nut' file in 'left4dead2/ems/tas_kit/' folder</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!trigger</td>
+		<td>&nbsp;Get function to spawn a trigger at your position</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!timer <i>arg1</i></td>
+		<td>&nbsp;Set timer countdown; <i>arg1</i> - value (e.g. 2.5)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!find <i>arg1</i></td>
+		<td>&nbsp;Find an item; <i>arg1</i> - classname of entity (e.g. pistol_magnum, gascan, pain_pills)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!xclip <i>arg1</i></td>
+		<td>&nbsp;Simulate bot teleportation; <i>arg1</i> - type: fast/exact/double</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg</td>
+		<td>&nbsp;Toggle developer mode</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg nav</td>
+		<td>&nbsp;Show navigation mesh</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg items</td>
+		<td>&nbsp;Glow all items</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg tp</td>
+		<td>&nbsp;Get action function to teleport yourself</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg trigger</td>
+		<td>&nbsp;Show triggers</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg start</td>
+		<td>&nbsp;Start speedrun timer</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg stop</td>
+		<td>&nbsp;Stop speedrun timer</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg set <i>arg1</i></td>
+		<td>&nbsp;Set value of timer; <i>arg1</i> - value (e.g. 123.5)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg clear</td>
+		<td>&nbsp;Remove all spawned messages during debugging</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg tr</td>
+		<td>&nbsp;Toggle tool for easier creating of triggers</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!dbg dump</td>
+		<td>&nbsp;Dump created triggers to 'triggers_dump.nut' file in 'left4dead2/ems/tas_kit/' folder</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!fillbot</td>
+		<td>&nbsp;Toggle fill bot</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!autosb</td>
+		<td>&nbsp;Toggle auto spitterboost</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!factor</td>
+		<td>&nbsp;Change multiplier of jump time</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!bhop</td>
+		<td>&nbsp;Toggle auto bunnyhop</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!bhop2</td>
+		<td>&nbsp;Toggle host auto bunnyhop for local player</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!aimbot</td>
+		<td>&nbsp;Toggle aimbot (not local player must bind MOUSE1 to +alt2)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!aimbot2</td>
+		<td>&nbsp;Toggle aimbot №2, aims after shooting</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!ragebot</td>
+		<td>&nbsp;Toggle ragebot</td>
+	</tr>
+	<tr>
+		<td>&nbsp;!autostrafer</td>
+		<td>&nbsp;Toggle simple autostrafer</td>
+	</tr>
+	<tbody>
+</table>

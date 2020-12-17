@@ -1,0 +1,206 @@
+<style>
+	.tbl {
+		border:1px solid #686868;
+		border-collapse:collapse;
+		padding:5px;
+	}
+	.tbl th {
+		border:1px solid #686868;
+		padding:5px;
+		background:#686868;
+	}
+	.tbl td {
+		border:1px solid #686868;
+		padding:5px;
+		background:#3A3A3A;
+		color:#B9B7B6;
+	}
+</style>
+
+<body bgcolor="#353535">
+
+<table class="tbl">
+	<caption><span style="color: #FFFFFF;font-size: 1.6em;font-family: sans-serif;">Main Tools of TASK</span></th>
+		<th><span style="color: #000000;">Function</span></th>
+		<th><span style="color: #000000;">Signature</span></th>
+		<th><span style="color: #000000;">Description</span></th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>&nbsp;SpawnBileEffect</td>
+		<td>&nbsp;table SpawnBileEffect(Vector <i>origin</i>)</td>
+		<td>&nbsp;Simulate a broken bile</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SpawnBarrel</td>
+		<td>&nbsp;handle SpawnBarrel(Vector <i>origin</i>, QAngle <i>angles</i> = null)</td>
+		<td>&nbsp;Spawn an explosive barrel from The Sacrifice</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SpawnItem</td>
+		<td>&nbsp;handle SpawnItem(string <i>classname</i>, Vector <i>origin</i>, QAngle <i>angles</i>, int <i>count</i> = 1, float <i>radius</i> = 0.0, bool <i>physics</i> = false, string <i>targetname</i> = null)</td>
+		<td>&nbsp;Spawn an item (argument 'radius' allows to delete an item spawned before)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SpawnZombie</td>
+		<td>&nbsp;handle SpawnZombie(string <i>zombiename</i>, Vector <i>origin</i>, QAngle <i>angles</i> = null, bool <i>bIdle</i> = false, bool <i>bRush</i> = false, bool <i>bFastSpawn</i> = true)</td>
+		<td>&nbsp;Spawn a zombie ('bRush' forces CI to attack survivors, 'bFastSpawn' spawns CI faster)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SpawnCommon</td>
+		<td>&nbsp;void SpawnCommon(string <i>model</i>, Vector <i>origin</i>, QAngle <i>angles</i> = null, float <i>delay</i> = 0.0)</td>
+		<td>&nbsp;Spawn a CI with a specified model</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SpawnCommonWithBile</td>
+		<td>&nbsp;void SpawnCommonWithBile(Vector <i>origin</i>, QAngle <i>angles</i> = null, bool <i>bIgnoreCEDAPopulation</i> = false)<br></td>
+		<td>&nbsp;Spawn a CEDA zombie with bile</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SpawnCommonForCB</td>
+		<td>&nbsp;handle SpawnCommonForCB(Vector <i>origin</i>, QAngle <i>angles</i> = null, float <i>attackDelay</i> = 0.0, handle <i>target</i> = null, bool <i>ignoreDistance</i> = false, string <i>targetname</i> = "__common_for_cb__")</td>
+		<td>&nbsp;Spawn a CI for common boost (reacts to shooting sounds)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SpawnTrigger</td>
+		<td>&nbsp;handle SpawnTrigger(string <i>targetname</i>, Vector <i>origin</i>, Vector <i>maxs</i> = Vector(64, 64, 128), Vector <i>mins</i> = Vector(-64, -64, 0), string <i>sFunction</i> = "OnTriggerTouch", int <i>type</i> = TR_CLIENTS, string output = "OnStartTouch", string <i>classname</i> = "trigger_multiple")</td>
+		<td>&nbsp;Spawn a trigger</td>
+	</tr>
+	<tr>
+		<td>&nbsp;RemoveItemByName</td>
+		<td>&nbsp;int RemoveItemByName(string <i>classname</i>)</td>
+		<td>&nbsp;Remove an item by name ('null' argument removes all items)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;RemoveItemWithin</td>
+		<td>&nbsp;int RemoveItemWithin(Vector <i>position</i>, float <i>radius</i>)</td>
+		<td>&nbsp;Remove an item by a specified radius</td>
+	</tr>
+	<tr>
+		<td>&nbsp;TakeItem</td>
+		<td>&nbsp;void TakeItem(handle <i>player</i>, handle <i>item</i>, bool <i>previousAngles</i> = true, bool <i>velocityDirection</i> = false)<br></td>
+		<td>&nbsp;Take a specified item</td>
+	</tr>
+	<tr>
+		<td>&nbsp;TakeNearestItem</td>
+		<td>&nbsp;void TakeNearestItem(handle <i>player</i>, bool <i>previousAngles</i> = true, bool <i>velocityDirection</i> = false, bool <i>findNearestEntity</i> = true, string <i>classname</i> = null)<br></td>
+		<td>&nbsp;Take a nearest item</td>
+	</tr>
+	<tr>
+		<td>&nbsp;TakeNearestItemByClassname</td>
+		<td>&nbsp;void TakeNearestItemByClassname(handle <i>player</i>, string <i>classname</i>, bool <i>previousAngles</i> = true, bool <i>velocityDirection</i> = false)<br></td>
+		<td>&nbsp;Take a nearest item with a specified classname</td>
+	</tr>
+	<tr>
+		<td>&nbsp;UseEntity</td>
+		<td>&nbsp;void UseEntity(handle <i>player</i>, handle <i>entity</i>, bool <i>previousAngles</i> = true, bool <i>velocityDirection</i> = false)<br></td>
+		<td>&nbsp;Use a specified entity</td>
+	</tr>
+	<tr>
+		<td>&nbsp;UseNearestEntity</td>
+		<td>&nbsp;void UseNearestEntity(handle <i>player</i>, bool <i>previousAngles</i> = true, bool <i>velocityDirection</i> = false, bool <i>findNearestEntity</i> = true, string <i>classname</i> = null)<br></td>
+		<td>&nbsp;Use a nearest entity</td>
+	</tr>
+	<tr>
+		<td>&nbsp;UseNearestEntityByClassname</td>
+		<td>&nbsp;void UseNearestEntityByClassname(handle <i>player</i>, string <i>classname</i>, bool <i>previousAngles</i> = true, bool <i>velocityDirection</i> = false)</td>
+		<td>&nbsp;Use a nearest entity with a specified classname</td>
+	</tr>
+	<tr>
+		<td>&nbsp;ScriptedTP</td>
+		<td>&nbsp;void ScriptedTP(handle <i>playerFrom</i>, handle <i>playerTo</i>, float <i>time</i> = 6.1, bool <i>bStuckTeleport</i> = false, int <i>mode</i> = 0)<br></td>
+		<td>&nbsp;Scripted IDLE/Stuck teleport from player A to player B</td>
+	</tr>
+	<tr>
+		<td>&nbsp;RemoveInvSlot</td>
+		<td>&nbsp;void RemoveInvSlot(handle <i>player</i>, int <i>slot</i>)</td>
+		<td>&nbsp;Remove a weapon from specified slot (0 <= x <= 5)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;AddScriptedTankSpawn</td>
+		<td>&nbsp;bool AddScriptedTankSpawn(Vector <i>origin</i>)</td>
+		<td>&nbsp;Add a scripted tank spawn for finale (first in - first out)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;OpenSafeRoomDoor</td>
+		<td>&nbsp;void OpenSafeRoomDoor(bool <i>bOpen</i> = false)</td>
+		<td>&nbsp;Open a saferoom door</td>
+	</tr>
+	<tr>
+		<td>&nbsp;CloseSafeRoomDoor</td>
+		<td>&nbsp;void CloseSafeRoomDoor(bool <i>bBeginningDoor</i> = true)</td>
+		<td>&nbsp;Close a saferoom door</td>
+	</tr>
+	<tr>
+		<td>&nbsp;DumpInfected</td>
+		<td>&nbsp;void DumpInfected()</td>
+		<td>&nbsp;Dump all infected to 'zdump.nut' file in 'left4dead2/ems/tas_kit/' folder</td>
+	</tr>
+	<tr>
+		<td>&nbsp;DebugItems</td>
+		<td>&nbsp;int DebugItems(string <i>name</i> = null)</td>
+		<td>&nbsp;Glow all items or a specified one class</td>
+	</tr>
+	<tr>
+		<td>&nbsp;PrintCurrentTime</td>
+		<td>&nbsp;void PrintCurrentTime(string <i>message</i> = null, bool <i>bTimerFormat</i> = false)<br></td>
+		<td>&nbsp;Print current time of started speedrun</td>
+	</tr>
+	<tr>
+		<td>&nbsp;GetCurrentTime</td>
+		<td>&nbsp;string/float GetCurrentTime(bool <i>bTimerFormat</i> = false)<br></td>
+		<td>&nbsp;Returns current time</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SetCurrentTime</td>
+		<td>&nbsp;void SetCurrentTime(float <i>time</i>)</td>
+		<td>&nbsp;Set current time</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SetPreviousSegmentTime</td>
+		<td>&nbsp;void SetPreviousSegmentTime(float <i>time</i>)</td>
+		<td>&nbsp;Set time of previous segment</td>
+	</tr>
+	<tr>
+		<td>&nbsp;EnableAutoClimb</td>
+		<td>&nbsp;void EnableAutoClimb()</td>
+		<td>&nbsp;Change camera angles perpendicular to the ladder normal</td>
+	</tr>
+	<tr>
+		<td>&nbsp;DisableAutoClimb</td>
+		<td>&nbsp;void DisableAutoClimb()</td>
+		<td>&nbsp;Disable auto climb</td>
+	</tr>
+	<tr>
+		<td>&nbsp;EnableAutoBileBreaker</td>
+		<td>&nbsp;void EnableAutoBileBreaker()</td>
+		<td>&nbsp;Break any bile near a player (could be useful if bile not break while playback movements)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;DisableAutoBileBreaker</td>
+		<td>&nbsp;void DisableAutoBileBreaker()</td>
+		<td>&nbsp;Disable auto bile breaker</td>
+	</tr>
+	<tr>
+		<td>&nbsp;AutoRocketJump</td>
+		<td>&nbsp;void AutoRocketJump(handle <i>player</i>, QAngle <i>angles</i>, float <i>radius</i> = 61.0, bool <i>bMethod2D</i> = false, bool <i>bDuck</i> = true, handle <i>target</i> = null, bool <i>bIgnorePlayersOnGround</i> = false)<br></td>
+		<td>&nbsp;Auto grenade launcher boost</td>
+	</tr>
+	<tr>
+		<td>&nbsp;AutoBileBoost</td>
+		<td>&nbsp;void AutoBileBoost(handle <i>player</i>, QAngle <i>angles</i>, float <i>radius</i> = 80.0, bool <i>bMethod2D</i> = false, bool <i>bDuck</i> = true, bool <i>bJump</i> = false, handle <i>target</i> = null, bool <i>bIgnorePlayersOnGround</i> = false)<br></td>
+		<td>&nbsp;Auto bile boost</td>
+	</tr>
+	<tr>
+		<td>&nbsp;AutoGrenadeBoost</td>
+		<td>&nbsp;void AutoGrenadeBoost(handle <i>player</i>, float <i>pitch</i>, array/handle <i>targets</i> = [], bool <i>bDuck</i> = true, bool <i>bJump</i> = false)</td>
+		<td>&nbsp;Auto molotov/pipe boost (pitch is Y axis, QAngle(-15.2, 47.7, 0.0) => 47.7)</td>
+	</tr>
+	<tr>
+		<td>&nbsp;RemoveAutoBoost</td>
+		<td>&nbsp;void RemoveAutoBoost(handle <i>player</i> = null)</td>
+		<td>&nbsp;Remove autoboost for all or a specified player</td>
+	</tr>
+	<tbody>
+</table>
