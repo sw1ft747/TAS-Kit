@@ -1,6 +1,8 @@
 # TAS Kit
 VScript tools for Left 4 Dead 2 TAS
 
+Note: The core of **TASK** is Library of Utils which greatly expands the possibilities in scripting
+
 # Features
 * Timer
 
@@ -18,7 +20,11 @@ VScript tools for Left 4 Dead 2 TAS
 
 * Auto Climb for ladders
 
+* Auto Shove
+
 * Fill bot
+
+* Advanced hooks for convenient using
 
 * Custom Spawn for CI
 
@@ -29,11 +35,11 @@ VScript tools for Left 4 Dead 2 TAS
 # Installing
 Download the release archive, place **tas_kit.vpk** and **finales_hook_master.vpk** in ***Left 4 Dead 2/left4dead2/addons/*** folder
 
-You can use **remove_timer.vpk** file to hide Timer during demo playback
+You can use **remove_timer.vpk** addon to hide Timer during demo playback
 
 Place **main.nut** file in ***Left 4 Dead 2/left4dead2/scripts/vscripts/*** folder
 
-Find **sm_input_emulator.smx** file (part of Auto Climb) in the archive and place it in your SourceMod folder with plugins
+Find **sm_input_emulator.smx** plugins (needed for Auto Climb) in the archive and place it in your SourceMod folder with plugins
 
 # Documentation
 HTML files placed in ***docs*** folder: description of functions, chat commands and name of items/weapons
