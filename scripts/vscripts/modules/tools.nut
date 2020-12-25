@@ -3,6 +3,7 @@
 // Powered by AP
 
 if (!("g_bAutoClimb" in this)) g_bAutoClimb <- array(MAXCLIENTS + 1, true);
+if (!("g_bAutoShove" in this)) g_bAutoShove <- array(MAXCLIENTS + 1, true);
 if (!("g_iClimbDirection" in this)) g_iClimbDirection <- array(MAXCLIENTS + 1, 1);
 
 g_aBilesToProcess <- [];
@@ -91,6 +92,7 @@ g_tItems <-
 	"propanetank" : {classname = "prop_physics", model = "models/props_junk/propanecanister001a.mdl"}
 	"oxygentank" : {classname = "prop_physics", model = "models/props_equipment/oxygentank01.mdl"}
 	"fireworkcrate" : {classname = "prop_physics", model = "models/props_junk/explosive_box001.mdl"}
+	"cola_bottles" : {classname = "prop_physics", model = "models/w_models/weapons/w_cola.mdl"}
 	"baseball_bat" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_bat.mdl"}
 	"cricket_bat" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_cricket_bat.mdl"}
 	"crowbar" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_crowbar.mdl"}
@@ -157,12 +159,28 @@ __tGameEventsListener <-
 {
 	OnWeaponFire = function(tParams)
 	{
+		local sWeapon = tParams["weapon"];
 		local hPlayer = tParams["_player"];
 		if (!IsPlayerABot(hPlayer) && !hPlayer.IsIncapacitated())
 		{
-			if (tParams["weapon"] != "vomitjar")
+			if (sWeapon != "vomitjar")
 			{
-				if (tParams["weapon"] != "pipe_bomb" && tParams["weapon"] != "molotov")
+				switch (sWeapon)
+				{
+					case "gascan":
+					case "cola_bottles":
+					{
+						local idx = hPlayer.GetEntityIndex();
+						if (g_bAutoShove[idx] && !g_bFillBot[idx])
+							hPlayer.PressButton(IN_ATTACK2);
+						return;
+					}
+					case "propanetank":
+					case "oxygentank":
+					case "fireworkcrate":
+						return;
+				}
+				if (sWeapon != "pipe_bomb" && sWeapon != "molotov")
 				{
 					for (local i = 0; i < tCB["aList"].len(); i++)
 					{
@@ -358,12 +376,22 @@ function SpawnItem(sName, vecOrigin, eAngles = null, iCount = 1, flRadius = 0.0,
 		local sClass = g_tItems[sName]["classname"];
 		local tParams = {targetname = sTargetName, origin = vecOrigin, angles = kvstr(eAngles)};
 		tParams.rawset((sClass != "prop_physics" ? "count" : "model"), (sClass != "prop_physics" ? iCount : g_tItems[sName]["model"]));
-		if (sName == "ammo" || sName == "ammo_l4d") tParams.rawset("model", g_tItems[sName]["model"]);
-		else if (sClass == "weapon_melee_spawn") tParams.rawset("melee_weapon", sName);
-		else if (bPhysicsWeapon) if (sClass.find("_spawn") != null) sClass = sClass.slice(0, -6);
+		if (sName == "ammo" || sName == "ammo_l4d")
+		{
+			tParams.rawset("model", g_tItems[sName]["model"]);
+		}
+		else if (sClass == "weapon_melee_spawn")
+		{
+			tParams.rawset("melee_weapon", sName);
+		}
+		else if (bPhysicsWeapon)
+		{
+			if (sClass.find("_spawn") != null) sClass = sClass.slice(0, -6);
+			else if (sName == "cola_bottles") sClass = "weapon_cola_bottles";
+		}
 		return SpawnEntityFromTable(sClass, tParams);
 	}
-	else printl("[SpawnItem] Invalid name");
+	printl("[SpawnItem] Invalid name");
 }
 
 function SpawnZombie(sName, vecOrigin, eAngles = null, bIdle = false, bRush = false, bFastSpawn = true)
@@ -410,7 +438,7 @@ function SpawnZombie(sName, vecOrigin, eAngles = null, bIdle = false, bRush = fa
 			}
 		}
 	}
-	else printl("[SpawnZombie] Invalid name");
+	printl("[SpawnZombie] Invalid name");
 }
 
 function SpawnCommon(sName, vecOrigin, eAngles = null, flDelay = 0.0)
@@ -437,7 +465,7 @@ function SpawnCommon(sName, vecOrigin, eAngles = null, flDelay = 0.0)
 			AcceptEntityInput(hEntity, "Kill", "", flDelay);
 		}
 	}
-	else printl("[SpawnCommon] Invalid argument");
+	printl("[SpawnCommon] Invalid argument");
 }
 
 function SpawnCommonWithBile(vecOrigin, eAngles = null, bIgnoreCEDAPopulation = false)
@@ -930,11 +958,13 @@ function DebugItems(sItemName = null)
 		else if (sItemName == "propanetank") sModel = "models/props_junk/propanecanister001a.mdl";
 		else if (sItemName == "oxygentank") sModel = "models/props_equipment/oxygentank01.mdl";
 		else if (sItemName == "fireworkcrate") sModel = "models/props_junk/explosive_box001.mdl";
+		else if (sItemName == "cola_bottles") sModel = "models/w_models/weapons/w_cola.mdl";
 	}
 	while (hEntity = Entities.Next(hEntity))
 	{
 		local sClass = hEntity.GetClassname();
-		if ((sClass.find("weapon_") != null && sClass.find("_spawn") != null) || sClass.find("upgrade_") != null || sClass == "prop_fuel_barrel" || sClass == "prop_physics" || sClass == "weapon_gascan")
+		if ((sClass.find("weapon_") != null && sClass.find("_spawn") != null) || sClass.find("upgrade_") != null ||
+			sClass == "prop_fuel_barrel" || sClass == "prop_physics" || sClass == "weapon_gascan" || sClass == "weapon_cola_bottles")
 		{
 			if (sModel)
 			{
@@ -945,10 +975,9 @@ function DebugItems(sItemName = null)
 			{
 				if (sItemName)
 				{
-					if (!sModel)
+					if (!sModel && sClass.find(sItemName) == null)
 					{
-						if (sClass.find(sItemName) == null)
-							continue;
+						continue;
 					}
 					printf("[Debug Items] Specific item (idx %d) found: %s", hEntity.GetEntityIndex(), ("setpos_exact " + kvstr(hEntity.GetOrigin())));
 				}
@@ -1182,54 +1211,57 @@ function AutoClimb_Think()
 	local hPlayer;
 	while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 	{
-		if (!CEntity(hPlayer).KeyInScriptScope("auto_climb"))
+		if (hPlayer.IsSurvivor())
 		{
-			CEntity(hPlayer).SetScriptScopeVar("auto_climb", {
-				on_ladder = false
-				direction = null
-			});
-		}
-		local idx = hPlayer.GetEntityIndex();
-		local tParams = CEntity(hPlayer).GetScriptScopeVar("auto_climb");
-		if (NetProps.GetPropInt(hPlayer, "m_MoveType") == MOVETYPE_LADDER)
-		{
-			if (!tParams["on_ladder"])
+			if (!CEntity(hPlayer).KeyInScriptScope("auto_climb"))
 			{
-				local hLadder, hLadderTemp, flDistanceSqrTemp;
-				local vecPos = hPlayer.GetOrigin();
-				local flDistanceSqr = 1000000000.0;
-				while (hLadderTemp = Entities.FindByClassname(hLadderTemp, "func_simpleladder"))
+				CEntity(hPlayer).SetScriptScopeVar("auto_climb", {
+					on_ladder = false
+					direction = null
+				});
+			}
+			local idx = hPlayer.GetEntityIndex();
+			local tParams = CEntity(hPlayer).GetScriptScopeVar("auto_climb");
+			if (NetProps.GetPropInt(hPlayer, "m_MoveType") == MOVETYPE_LADDER)
+			{
+				if (!tParams["on_ladder"])
 				{
-					local vecOrigin = VectorLerp(NetProps.GetPropVector(hLadderTemp, "m_Collision.m_vecMins"), NetProps.GetPropVector(hLadderTemp, "m_Collision.m_vecMaxs"), 0.5);
-					if ((flDistanceSqrTemp = (vecOrigin - vecPos).LengthSqr()) < flDistanceSqr)
+					local hLadder, hLadderTemp, flDistanceSqrTemp;
+					local vecPos = hPlayer.GetOrigin();
+					local flDistanceSqr = 1000000000.0;
+					while (hLadderTemp = Entities.FindByClassname(hLadderTemp, "func_simpleladder"))
 					{
-						flDistanceSqr = flDistanceSqrTemp;
-						hLadder = hLadderTemp;
+						local vecOrigin = VectorLerp(NetProps.GetPropVector(hLadderTemp, "m_Collision.m_vecMins"), NetProps.GetPropVector(hLadderTemp, "m_Collision.m_vecMaxs"), 0.5);
+						if ((flDistanceSqrTemp = (vecOrigin - vecPos).LengthSqr()) < flDistanceSqr)
+						{
+							flDistanceSqr = flDistanceSqrTemp;
+							hLadder = hLadderTemp;
+						}
+					}
+					if (!hLadder) continue;
+					local vecNormal = NetProps.GetPropVector(hLadder, "m_climbableNormal");
+					local eAngles = VectorToQAngle(vecNormal);
+					eAngles.x = 90.0;
+					eAngles.y -= 90.0;
+					tParams["direction"] = eAngles.Forward();
+					tParams["on_ladder"] = true;
+					if (g_bAutoClimb[idx] && g_iClimbDirection[idx])
+					{
+						SendToConsole("sm_input " + hPlayer.GetEntityIndex() + " " + (g_iClimbDirection[idx] == 1 ? IN_BACK | IN_MOVELEFT : IN_FORWARD | IN_MOVERIGHT));
 					}
 				}
-				if (!hLadder) continue;
-				local vecNormal = NetProps.GetPropVector(hLadder, "m_climbableNormal");
-				local eAngles = VectorToQAngle(vecNormal);
-				eAngles.x = 90.0;
-				eAngles.y -= 90.0;
-				tParams["direction"] = eAngles.Forward();
-				tParams["on_ladder"] = true;
-				if (g_bAutoClimb[idx] && g_iClimbDirection[idx])
+				if (g_iClimbDirection[idx])
 				{
-					SendToConsole("sm_input " + hPlayer.GetEntityIndex() + " " + (g_iClimbDirection[idx] == 1 ? IN_BACK | IN_MOVELEFT : IN_FORWARD | IN_MOVERIGHT));
+					hPlayer.SetForwardVector(tParams["direction"]);
 				}
+				continue;
 			}
-			if (g_iClimbDirection[idx])
+			else if (tParams["on_ladder"])
 			{
-				hPlayer.SetForwardVector(tParams["direction"]);
+				SendToConsole("sm_input " + hPlayer.GetEntityIndex() + " 0");
 			}
-			continue;
+			tParams["on_ladder"] = false;
 		}
-		else if (tParams["on_ladder"])
-		{
-			SendToConsole("sm_input " + hPlayer.GetEntityIndex() + " 0");
-		}
-		tParams["on_ladder"] = false;
 	}
 }
 
