@@ -1,5 +1,5 @@
 # TAS Kit
-VScript tools for Left 4 Dead 2 TAS
+VScript tools for Left 4 Dead 2 TAS xd
 
 Note: The core of **TASK** is Library of Utils which greatly expands the possibilities in scripting
 
@@ -18,7 +18,7 @@ Note: The core of **TASK** is Library of Utils which greatly expands the possibi
 
 * Auto Spitterboost
 
-* Auto Climb for ladders
+* Auto Climb
 
 * Auto Shove
 
@@ -37,7 +37,7 @@ Download the release archive, place **tas_kit.vpk** and **finales_hook_master.vp
 
 You can use **remove_timer.vpk** addon to hide Timer during demo playback
 
-Place **main.nut** file in ***Left 4 Dead 2/left4dead2/scripts/vscripts/*** folder
+Place **main.nut** file in ***Left 4 Dead 2/left4dead2/scripts/vscripts/*** folder (also you can find this file in ***Left 4 Dead 2/left4dead2/ems/*** folder after starting the game)
 
 Find **sm_input_emulator.smx** plugins (needed for Auto Climb) in the archive and place it in your SourceMod folder with plugins
 
@@ -48,3 +48,15 @@ HTML files placed in ***docs*** folder: description of functions, chat commands 
 During restart of speedrun ***main.nut*** file will be executed, see the comments in the file to clarify how to work with it
 
 Two ways to (re)start speedrun: chat command ***!restart*** or via bind ***bind b "script RestartSpeedrun()"***
+
+# Toggle some features through arrays only
+g_bAutoClimb (*33* elements, *true*)
+
+g_bAutoShove (*33* elements, *true*)
+
+g_iClimbDirection (*33* elements, *1*): 0 - disable moving, 1 - move up, 2 - move down
+
+Example:
+```squirrel
+g_bAutoClimb[hPlayer.GetEntityIndex()] = false;
+```
