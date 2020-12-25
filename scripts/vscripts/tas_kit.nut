@@ -26,6 +26,7 @@ cvar("z_mega_mob_size", 50);
 
 g_flFinaleStartTime <- null;
 g_bSpeedrunStarted <- false;
+
 if (!("g_bRestarting" in this)) g_bRestarting <- false;
 
 __tEvents <- {};
@@ -102,93 +103,87 @@ function OnGameplayStart()
 						vecPos = null;
 						eAngles = null;
 						aVars = array(8, null);
-						if (tbl.rawin("origin"))
+						if (tbl.rawin("origin") && tbl["origin"])
 						{
-							if (tbl["origin"])
-							{
-								aVars[0] = tbl["origin"];
-								vecPos = tbl["origin"];
-							}
+							aVars[0] = tbl["origin"];
+							vecPos = tbl["origin"];
 						}
-						if (tbl.rawin("angles"))
+						if (tbl.rawin("angles") && tbl["angles"])
 						{
-							if (tbl["angles"])
-							{
-								aVars[1] = tbl["angles"];
-								eAngles = tbl["angles"];
-							}
+							aVars[1] = tbl["angles"];
+							eAngles = tbl["angles"];
 						}
-						if (tbl.rawin("velocity")) if (tbl["velocity"]) aVars[2] = tbl["velocity"];
-						if (tbl.rawin("health")) if (tbl["health"] != null) aVars[3] = tbl["health"];
-						if (tbl.rawin("buffer")) if (tbl["buffer"] != null) aVars[4] = tbl["buffer"];
-						if (tbl.rawin("revives")) if (tbl["revives"] != null) aVars[5] = tbl["revives"];
-						if (tbl.rawin("idle")) if (tbl["idle"]) bIdle = true;
-						if (tbl.rawin("Inventory")) {
-							if (tbl["Inventory"])
+						if (tbl.rawin("velocity") && tbl["velocity"]) aVars[2] = tbl["velocity"];
+						if (tbl.rawin("health") && tbl["health"] != null) aVars[3] = tbl["health"];
+						if (tbl.rawin("buffer") && tbl["buffer"] != null) aVars[4] = tbl["buffer"];
+						if (tbl.rawin("revives") && tbl["revives"] != null) aVars[5] = tbl["revives"];
+						if (tbl.rawin("idle") && tbl["idle"]) bIdle = true;
+						if (tbl.rawin("Inventory") && tbl["Inventory"]) {
+							local aWeaponList = [];
+							local aInv = array(7, null);
+							local tInv = tbl["Inventory"];
+							local sActiveWeapon, bDual;
+							if (tInv.rawin("active_slot") && !tInv.rawin("slot5") && tInv["active_slot"])
 							{
-								local sActiveWeapon;
-								local aWeaponList = [];
-								local aInv = array(7, null);
-								local tInv = tbl["Inventory"];
-								if (tInv.rawin("active_slot") && !tInv.rawin("slot5"))
+								local sSlot = tInv["active_slot"];
+								sActiveWeapon = (sSlot.slice(-1).tointeger() < 2 ? tInv[sSlot]["weapon"] : tInv[sSlot]);
+							}
+							if (tInv.rawin("slot0") && tInv["slot0"])
+							{
+								if (tInv["slot0"].rawin("clip")) aInv[2] = tInv["slot0"]["clip"];
+								if (tInv["slot0"].rawin("ammo")) aInv[3] = tInv["slot0"]["ammo"];
+								if (tInv["slot0"].rawin("upgrade_type")) aInv[4] = tInv["slot0"]["upgrade_type"];
+								if (tInv["slot0"].rawin("upgrade_clip")) aInv[5] = tInv["slot0"]["upgrade_clip"];
+							}
+							if (tInv.rawin("slot1") && tInv["slot1"])
+							{
+								if (tInv["slot1"].rawin("clip")) aInv[6] = tInv["slot1"]["clip"];
+								bDual = tInv["slot1"].rawin("dual") && tInv["slot1"]["dual"];
+							}
+							foreach (slot, val in tInv)
+							{
+								if (val)
 								{
-									if (tInv["active_slot"])
+									if (slot == "slot0")
 									{
-										local sSlot = tInv["active_slot"];
-										sActiveWeapon = (sSlot.slice(-1).tointeger() < 2 ? tInv[sSlot]["weapon"] : tInv[sSlot]);
+										aWeaponList.push(val["weapon"]);
+									}
+									else if (slot == "slot1")
+									{
+										if (bDual && val["weapon"] == "pistol") aWeaponList.push("pistol");
+										aWeaponList.push(val["weapon"]);
+									}
+									else if (slot != "slot5" && slot != "active_slot")
+									{
+										aWeaponList.push(val);
 									}
 								}
-								foreach (slot, val in tInv)
+							}
+							if (sActiveWeapon)
+							{
+								for (local i = 0; i < aWeaponList.len(); i++)
 								{
-									if (val)
+									if (aWeaponList[i] == sActiveWeapon)
 									{
-										if (slot == "slot0" || slot == "slot1") aWeaponList.push(val["weapon"]);
-										else if (slot != "slot5" && slot != "active_slot") aWeaponList.push(val);
-									}
-								}
-								if (sActiveWeapon)
-								{
-									for (local i = 0; i < aWeaponList.len(); i++)
-									{
-										if (aWeaponList[i] == sActiveWeapon)
+										if (bDual && sActiveWeapon == "pistol")
 										{
-											aWeaponList.push(aWeaponList[i]);
-											aWeaponList.remove(i);
-											break;
+											aWeaponList.push("pistol");
+											aWeaponList.remove(i + 1);
 										}
+										aWeaponList.push(aWeaponList[i]);
+										aWeaponList.remove(i);
 									}
 								}
-								else if (tInv.rawin("slot5"))
-								{
-									if (tInv["slot5"])
-									{
-										aWeaponList.push(tInv["slot5"]);
-									}
-								}
-								aInv[0] = aWeaponList;
-								aInv[1] = sActiveWeapon;
-								if (tInv.rawin("slot0"))
-								{
-									if (tInv["slot0"])
-									{
-										local iClip, iAmmo, iUpgradeAmmo;
-										if (tInv["slot0"].rawin("clip")) aInv[2] = tInv["slot0"]["clip"];
-										if (tInv["slot0"].rawin("ammo")) aInv[3] = tInv["slot0"]["ammo"];
-										if (tInv["slot0"].rawin("upgrade_type")) aInv[4] = tInv["slot0"]["upgrade_type"];
-										if (tInv["slot0"].rawin("upgrade_clip")) aInv[5] = tInv["slot0"]["upgrade_clip"];
-									}
-								}
-								if (tInv.rawin("slot1"))
-								{
-									if (tInv["slot1"])
-									{
-										if (tInv["slot1"].rawin("clip")) aInv[6] = tInv["slot1"]["clip"];
-									}
-								}
-								aVars[6] = aInv;
 							}
+							else if (tInv.rawin("slot5") && tInv["slot5"])
+							{
+								aWeaponList.push(tInv["slot5"]);
+							}
+							aInv[0] = aWeaponList;
+							aInv[1] = sActiveWeapon;
+							aVars[6] = aInv;
 						}
-						if ("Actions" in tbl) if (tbl["Actions"]) aVars[7] = tbl["Actions"];
+						if ("Actions" in tbl && tbl["Actions"]) aVars[7] = tbl["Actions"];
 						if (hPlayer = Entities.FindByName(null, "!" + char))
 						{
 							if (vecPos || eAngles)
