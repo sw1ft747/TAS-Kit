@@ -1,9 +1,8 @@
 // Squirrel
-// I'm the comment line ( // ), don't touch me, and the other comments too! (if you don't know Squirrel syntax, yup)
 
 //SkipIntro(); // skip the intro of a custom campaign
 
-SetPreviousSegmentTime(0.0); // put here (instead of '0.0') the time you got from the previous segment(s); use this format: 129.133 !!
+SetPreviousSegmentTime(0.0); // put here (instead of '0.0') the time you got from the previous segment(s); for example: 129.133
 
 Cvars <- // console variables manager; format:  cvar_name = value(string or number)
 {
@@ -51,6 +50,7 @@ Survivors["coach"] <- // make sure that the character name is in lowercase
 		slot1 = // secondary weapon
 		{
 			weapon = "pistol_magnum"
+			dual = false
 			clip = 5
 		}
 		slot2 = "pipe_bomb" // throwable
@@ -85,8 +85,8 @@ function OnTriggerTouch()
 	if (!activator) return;
 	if (activator.IsSurvivor() && !g_bRestarting)
 	{
-		// sName - the name of a trigger
-		// activator - a player who activated a trigger
+		// sName - name of a trigger
+		// activator - player who activated a trigger
 		local sName = caller.GetName();
 		if (sName == "trigger_area1")
 		{
