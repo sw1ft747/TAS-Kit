@@ -32,6 +32,7 @@ function GetTransitionPosition(hPlayer)
 	if (SessionState["MapName"] in g_tTransitionLandmarks)
 	{
 		local vecPos = hPlayer.GetOrigin();
+		local hChangeLevel = Entities.FindByClassname(null, "info_changelevel");
 		local aPoints = g_tTransitionLandmarks[SessionState["MapName"]];
 		local vecCurrentLevel = Vector(aPoints[0], aPoints[1], aPoints[2]);
 		local vecNextLevel = Vector(aPoints[3], aPoints[4], aPoints[5]);
@@ -43,7 +44,7 @@ function GetTransitionPosition(hPlayer)
 			vecPos = vecCurrentLevel - hPlayer.GetOrigin() + vecNextLevel;
 			vecPos.z = flHeight;
 		}
-		sayf("Origin: Vector(%.03f, %.03f, %.03f)", vecPos.x, vecPos.y, vecPos.z);
+		sayf("%s: Vector(%.03f, %.03f, %.03f)", (hChangeLevel ? NetProps.GetPropString(hChangeLevel, "m_mapName") : "Origin"), vecPos.x, vecPos.y, vecPos.z);
 	}
 }
 
