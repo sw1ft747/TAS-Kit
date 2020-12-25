@@ -1,5 +1,5 @@
 // Squirrel
-// Custom Spawn for finales
+// Custom Spawn for Finales
 // Powered by AP
 
 CustomSpawn <-
@@ -136,16 +136,12 @@ function CustomSpawn::Think()
 		local iCount = 0;
 		while (hEntity = Entities.FindByClassname(hEntity, "infected"))
 		{
-			hEntity.ValidateScriptScope();
-			if (!("spawned" in hEntity.GetScriptScope()))
+			if (!CEntity(hEntity).KeyInScriptScope("spawned"))
 			{
-				hEntity.GetScriptScope()["spawned"] <- true;
-				if (CustomSpawn.aSpawnPoints.len() > 0)
+				CEntity(hEntity).SetScriptScopeVar("spawned", true);
+				if (CustomSpawn.aSpawnPoints.len() > 0 && !CEntity(hEntity).KeyInScriptScope("not_finale_ci"))
 				{
-					if (!("not_finale_ci" in hEntity.GetScriptScope()))
-					{
-						CustomSpawn.SetCommonPosition(hEntity, CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)]);
-					}
+					CustomSpawn.SetCommonPosition(hEntity, CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)]);
 				}
 				iCount++;
 			}
@@ -194,10 +190,9 @@ function CustomSpawn::OnBeginCustomStage(iNum, iType)
 			local hEntity;
 			while (hEntity = Entities.FindByClassname(hEntity, "infected"))
 			{
-				hEntity.ValidateScriptScope();
-				if (!("not_finale_ci" in hEntity.GetScriptScope()))
+				if (!CEntity(hEntity).KeyInScriptScope("not_finale_ci"))
 				{
-					hEntity.GetScriptScope()["not_finale_ci"] <- true;
+					CEntity(hEntity).SetScriptScopeVar("not_finale_ci", true);
 				}
 			}
 		}
