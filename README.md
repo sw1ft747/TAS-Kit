@@ -39,7 +39,7 @@ You can use **remove_timer.vpk** addon to hide Timer during demo playback
 
 Place **main.nut** file in ***Left 4 Dead 2/left4dead2/scripts/vscripts/*** folder (also you can find this file in ***Left 4 Dead 2/left4dead2/ems/*** folder after starting the game)
 
-Find **sm_input_emulator.smx** plugins (needed for Auto Climb) in the archive and place it in your SourceMod folder with plugins
+Find **sm_input_emulator.smx** plugin (needed for Auto Climb) in the archive and place it in your SourceMod folder with plugins
 
 # Documentation
 HTML files placed in ***docs*** folder: description of functions, chat commands and name of items/weapons
