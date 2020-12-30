@@ -1,5 +1,5 @@
 // Squirrel
-// Custom Spawn for Finales
+// Custom CI Spawn for Finales
 // Powered by AP
 
 CustomSpawn <-
@@ -25,6 +25,7 @@ CustomSpawn <-
 	Settings =
 	{
 		Enabled = false
+		ChangePosition = true
 		MaxTanksInFinale = 2
 		PanicMinSpawnTime = 3.133301
 		RelaxMinSpawnTime = 7.133331
@@ -136,14 +137,21 @@ function CustomSpawn::Think()
 		local iCount = 0;
 		while (hEntity = Entities.FindByClassname(hEntity, "infected"))
 		{
-			if (!CEntity(hEntity).KeyInScriptScope("spawned"))
+			local Entity = CEntity(hEntity);
+			if (!Entity.KeyInScriptScope("spawned"))
 			{
-				CEntity(hEntity).SetScriptScopeVar("spawned", true);
-				if (CustomSpawn.aSpawnPoints.len() > 0 && !CEntity(hEntity).KeyInScriptScope("not_finale_ci"))
-				{
-					CustomSpawn.SetCommonPosition(hEntity, CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)]);
-				}
 				iCount++;
+				Entity.SetScriptScopeVar("spawned", true);
+				if (CustomSpawn.aSpawnPoints.len() > 0 && !Entity.KeyInScriptScope("not_finale_ci"))
+				{
+					if (CustomSpawn.Settings.ChangePosition)
+					{
+						CustomSpawn.SetCommonPosition(hEntity, CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)]);
+						continue;
+					}
+					CEntity(SpawnZombie("infected", CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)], null, false, true)).SetScriptScopeVar("spawned", true);
+					hEntity.Kill();
+				}
 			}
 		}
 		if (iCount > 0)
