@@ -266,7 +266,7 @@ function Picker_Cmd(hPlayer)
 		local sClass = hEntity.GetClassname();
 		if (sClass == "player")
 		{
-			if (NetProps.GetPropInt(hEntity, "m_iObserverMode") == 0 && hEntity.IsAlive())
+			if (!NetProps.GetPropInt(hEntity, "m_iObserverMode") && hEntity.IsAlive())
 			{
 				if (hEntity.IsSurvivor())
 				{
@@ -289,8 +289,15 @@ function Picker_Cmd(hPlayer)
 			{
 				if (NetProps.GetPropString(hEntity, "m_ModelName") == tbl["model"])
 				{
-					sayf("Function:\nSpawnItem(\"%s\", Vector(%.03f, %.03f, %.03f), QAngle(%.03f, %.03f, %.03f), %d);",
-						item, vecPos.x, vecPos.y, vecPos.z, eAngles.x, eAngles.y, eAngles.z, NetProps.GetPropInt(hEntity, "m_itemCount"));
+					local sName = item;
+					local sAddition = "";
+					if (sName.find("gascan") != null && NetProps.GetPropInt(hEntity, "m_nSkin") == 1)
+					{
+						if (NetProps.GetPropInt(hEntity, "m_iTeamNum")) sAddition = ", 0.0, true";
+						sName = "gascan_scavenge"
+					}
+					sayf("Function:\nSpawnItem(\"%s\", Vector(%.03f, %.03f, %.03f), QAngle(%.03f, %.03f, %.03f), %d%s);",
+						sName, vecPos.x, vecPos.y, vecPos.z, eAngles.x, eAngles.y, eAngles.z, NetProps.GetPropInt(hEntity, "m_itemCount"), sAddition);
 					EmitSoundOnClient("Buttons.snd37", hPlayer);
 					return;
 				}
@@ -324,7 +331,7 @@ function Trigger_Cmd(hPlayer)
 	local vecPos = hPlayer.GetOrigin();
 	sayf("Function:\nSpawnTrigger(\"trigger_area\", Vector(%.03f, %.03f, %.03f));", vecPos.x, vecPos.y, vecPos.z);
 	SpawnEntityFromTable("prop_dynamic", {
-		targetname = "__trigger_dump__"
+		targetname = "task_trigger_dump"
 		model = "models/extras/info_speech.mdl"
 		glowstate = 3
 		disableshadows = 1
