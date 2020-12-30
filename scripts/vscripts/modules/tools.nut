@@ -2,158 +2,162 @@
 // Main Tools
 // Powered by AP
 
-if (!("g_bAutoClimb" in this)) g_bAutoClimb <- array(MAXCLIENTS + 1, true);
-if (!("g_bAutoShove" in this)) g_bAutoShove <- array(MAXCLIENTS + 1, true);
-if (!("g_iClimbDirection" in this)) g_iClimbDirection <- array(MAXCLIENTS + 1, 1);
-
 g_aBilesToProcess <- [];
 g_aAutoRocketJumpUsers <- [];
 g_aAutoBileBoostUsers <- [];
 g_aAutoGrenadeBoostUsers <- [];
 
-g_aPropPhysicsModels <-
-[
-	"models/props_junk/gascan001a.mdl"
-	"models/props_equipment/oxygentank01.mdl"
-	"models/props_junk/propanecanister001a.mdl"
-	"models/props_junk/explosive_box001.mdl"
-	"models/w_models/weapons/w_cola.mdl"
-	"models/props_junk/gnome.mdl"
-];
-
-g_aUseEntitiesList <-
-[
-	"prop_door_rotating_checkpoint"
-	"prop_door_rotating"
-	"upgrade_laser_sight"
-	"upgrade_ammo_explosive"
-	"upgrade_ammo_incendiary"
-	"func_button"
-];
-
-g_aPrimaryWeaponList <-
-[
-	"weapon_shotgun_chrome"
-	"weapon_pumpshotgun"
-	"weapon_shotgun_spas"
-	"weapon_autoshotgun"
-	"weapon_smg"
-	"weapon_smg_silenced"
-	"weapon_rifle"
-	"weapon_rifle_ak47"
-	"weapon_rifle_desert"
-	"weapon_hunting_rifle"
-	"weapon_sniper_military"
-	"weapon_rifle_m60"
-	"weapon_grenade_launcher"
-	"weapon_smg_mp5"
-	"weapon_rifle_sg552"
-	"weapon_sniper_scout"
-	"weapon_sniper_awp"
-];
-
-g_tItems <-
+if (!("g_bAutoTake" in this))
 {
-	"ammo" : {classname = "weapon_ammo_spawn", model = "models/props/terror/ammo_stack.mdl"}
-	"ammo_l4d" : {classname = "weapon_ammo_spawn", model = "models/props_unique/spawn_apartment/coffeeammo.mdl"}
-	"upgradepack_incendiary" : {classname = "weapon_upgradepack_incendiary_spawn", model = "models/w_models/weapons/w_eq_incendiary_ammopack.mdl"}
-	"upgradepack_explosive" : {classname = "weapon_upgradepack_explosive_spawn", model = "models/w_models/weapons/w_eq_explosive_ammopack.mdl"}
-	"upgrade_ammo_incendiary" : {classname = "upgrade_ammo_incendiary", model = "models/props/terror/incendiary_ammo.mdl"}
-	"upgrade_ammo_explosive" : {classname = "upgrade_ammo_explosive", model = "models/props/terror/exploding_ammo.mdl"}
-	"upgrade_laser_sight" : {classname = "upgrade_laser_sight", model = "models/w_models/Weapons/w_laser_sights.mdl"}
-	"pistol" : {classname = "weapon_pistol_spawn", model = "models/w_models/weapons/w_pistol_B.mdl"}
-	"pistol_magnum" : {classname = "weapon_pistol_magnum_spawn", model = "models/w_models/weapons/w_desert_eagle.mdl"}
-	"adrenaline" : {classname = "weapon_adrenaline_spawn", model = "models/w_models/weapons/w_eq_adrenaline.mdl"}
-	"pain_pills" : {classname = "weapon_pain_pills_spawn", model = "models/w_models/weapons/w_eq_painpills.mdl"}
-	"vomitjar" : {classname = "weapon_vomitjar_spawn", model = "models/w_models/weapons/w_eq_bile_flask.mdl"}
-	"pipe_bomb" : {classname = "weapon_pipe_bomb_spawn", model = "models/w_models/weapons/w_eq_pipebomb.mdl"}
-	"molotov" : {classname = "weapon_molotov_spawn", model = "models/w_models/weapons/w_eq_molotov.mdl"}
-	"defibrillator" : {classname = "weapon_defibrillator_spawn", model = "models/w_models/weapons/w_eq_defibrillator.mdl"}
-	"first_aid_kit" : {classname = "weapon_first_aid_kit_spawn", model = "models/w_models/weapons/w_eq_Medkit.mdl"}
-	"shotgun_chrome" : {classname = "weapon_shotgun_chrome_spawn", model = "models/w_models/weapons/w_pumpshotgun_A.mdl"}
-	"pumpshotgun" : {classname = "weapon_pumpshotgun_spawn", model = "models/w_models/weapons/w_shotgun.mdl"}
-	"shotgun_spas" : {classname = "weapon_shotgun_spas_spawn", model = "models/w_models/weapons/w_shotgun_spas.mdl"}
-	"autoshotgun" : {classname = "weapon_autoshotgun_spawn", model = "models/w_models/weapons/w_autoshot_m4super.mdl"}
-	"smg" : {classname = "weapon_smg_spawn", model = "models/w_models/weapons/w_smg_uzi.mdl"}
-	"smg_silenced" : {classname = "weapon_smg_silenced_spawn", model = "models/w_models/weapons/w_smg_a.mdl"}
-	"smg_mp5" : {classname = "weapon_smg_mp5", model = "models/w_models/weapons/w_smg_mp5.mdl"}
-	"rifle" : {classname = "weapon_rifle_spawn", model = "models/w_models/weapons/w_rifle_m16a2.mdl"}
-	"rifle_ak47" : {classname = "weapon_rifle_ak47_spawn", model = "models/w_models/weapons/w_rifle_ak47.mdl"}
-	"rifle_desert" : {classname = "weapon_rifle_desert_spawn", model = "models/w_models/weapons/w_desert_rifle.mdl"}
-	"rifle_sg552" : {classname = "weapon_rifle_sg552", model = "models/w_models/weapons/w_rifle_sg552.mdl"}
-	"hunting_rifle" : {classname = "weapon_hunting_rifle_spawn", model = "models/w_models/weapons/w_sniper_mini14.mdl"}
-	"sniper_military" : {classname = "weapon_sniper_military_spawn", model = "models/w_models/weapons/w_sniper_military.mdl"}
-	"sniper_scout" : {classname = "weapon_sniper_scout", model = "models/w_models/weapons/w_sniper_scout.mdl"}
-	"sniper_awp" : {classname = "weapon_sniper_awp", model = "models/w_models/weapons/w_sniper_awp.mdl"}
-	"rifle_m60" : {classname = "weapon_rifle_m60_spawn", model = "models/w_models/weapons/w_m60.mdl"}
-	"grenade_launcher" : {classname = "weapon_grenade_launcher_spawn", model = "models/w_models/weapons/w_grenade_launcher.mdl"}
-	"chainsaw" : {classname = "weapon_chainsaw_spawn", model = "models/weapons/melee/w_chainsaw.mdl"}
-	"gascan" : {classname = "prop_physics", model = "models/props_junk/gascan001a.mdl"}
-	"propanetank" : {classname = "prop_physics", model = "models/props_junk/propanecanister001a.mdl"}
-	"oxygentank" : {classname = "prop_physics", model = "models/props_equipment/oxygentank01.mdl"}
-	"fireworkcrate" : {classname = "prop_physics", model = "models/props_junk/explosive_box001.mdl"}
-	"cola_bottles" : {classname = "prop_physics", model = "models/w_models/weapons/w_cola.mdl"}
-	"baseball_bat" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_bat.mdl"}
-	"cricket_bat" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_cricket_bat.mdl"}
-	"crowbar" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_crowbar.mdl"}
-	"electric_guitar" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_electric_guitar.mdl"}
-	"fireaxe" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_fireaxe.mdl"}
-	"frying_pan" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_frying_pan.mdl"}
-	"golfclub" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_golfclub.mdl"}
-	"katana" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_katana.mdl"}
-	"machete" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_machete.mdl"}
-	"tonfa" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_tonfa.mdl"}
-	"shovel" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_shovel.mdl"}
-	"pitchfork" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_pitchfork.mdl"}
-	"knife" : {classname = "weapon_melee_spawn", model = "models/w_models/weapons/w_knife_t.mdl"}
-};
+	g_bAutoShove <- array(MAXCLIENTS + 1, true);
+	g_bAutoClimb <- array(MAXCLIENTS + 1, true);
+	g_iClimbDirection <- array(MAXCLIENTS + 1, 1);
 
-g_tTransitionLandmarks <-
-{
-	"c1m1_hotel" : [2136.000, 4472.000, 1248.000, 2504.000, 5128.000, 512.000]
-	"c1m2_streets" : [-7456.000, -4688.000, 448.000, 6758.820, -1426.180, 88.000]
-	"c1m3_mall" : [-2048.000, -4576.000, 592.002, -2048.000, -4576.000, 592.002]
-	"c2m1_highway" : [-880.000, -2592.000, -1028.000, 1653.000, 2786.000, 60.000]
-	"c2m2_fairgrounds" : [-4864.000, -5504.000, 0.000, 4080.000, 2048.000, 0.000]
-	"c2m3_coaster" : [-5248.000, 1664.000, 72.000, 3120.000, 3584.000, -120.000]
-	"c2m4_barns" : [-896.000, 2240.000, -176.000, -896.000, 2240.000, -176.000]
-	"c3m1_plankcountry" : [-2672.000, 400.000, 116.000, -8176.000, 7472.000, 72.000]
-	"c3m2_swamp" : [7523.000, -960.000, 192.000, -5789.000, 2112.000, 192.000]
-	"c3m3_shantytown" : [5008.000, -3776.000, 366.809, -5104.000, -1664.000, -81.191]
-	"c4m1_milltown_a" : [4032.000, -1600.000, 296.250, 3776.000, -1728.000, 296.500]
-	"c4m2_sugarmill_a" : [-1773.400, -13698.300, 138.250, -1773.400, -13698.300, 138.000]
-	"c4m3_sugarmill_b" : [3776.000, -1728.000, 296.250, 4032.000, -1600.000, 296.250]
-	"c4m4_milltown_b" : [4032.000, -1600.000, 296.250, 4032.000, -1600.000, 296.250]
-	"c5m1_waterfront" : [-3904.000, -1264.000, -288.000, -3904.000, -1264.000, -288.000]
-	"c5m2_park" : [-9856.000, -8032.000, -208.000, 6272.000, 8352.000, 48.000]
-	"c5m3_cemetery" : [7240.000, -9664.000, 113.000, -3296.000, 4792.000, 77.000]
-	"c5m4_quarter" : [1520.000, -3608.000, 128.000, -11984.000, 5760.000, 192.000]
-	"c6m1_riverbank" : [-3960.950, 1376.150, 744.000, 3239.050, -1231.850, -280.000]
-	"c6m2_bedlam" : [11272.000, 5056.000, -568.000, -2392.000, -464.000, -192.000]
-	"c7m1_docks" : [1871.690, 2437.110, 184.000, 10703.700, 2437.110, 184.000]
-	"c7m2_barge" : [-11080.300, 3123.700, 184.000, 1175.680, 3243.700, 176.000]
-	"c8m1_apartment" : [2948.000, 3084.000, -219.023, 2948.000, 3084.000, 36.977]
-	"c8m2_subway" : [10832.000, 4736.000, 41.000, 10832.000, 4736.000, 41.000]
-	"c8m3_sewers" : [12469.500, 12559.000, 25.000, 12469.500, 12559.000, 25.000]
-	"c8m4_interior" : [11555.400, 14884.600, 5545.000, 5539.400, 8356.600, 5545.000]
-	"c9m1_alleys" : [281.000, -1356.000, -156.000, 280.000, -1292.000, -156.000]
-	"c10m1_caves" : [-10912.000, -4962.410, 370.000, -11200.000, -8994.410, -510.000]
-	"c10m2_drainage" : [-8211.000, -5502.000, -23.000, -8212.000, -5502.000, -17.000]
-	"c10m3_ranchhouse" : [-2640.000, -128.000, 168.000, -3152.000, -128.000, 168.000]
-	"c10m4_mainstreet" : [1240.000, -5440.000, -15.000, 1960.000, 4576.000, -23.000]
-	"c11m1_greenhouse" : [5264.000, 2800.000, 68.000, 5264.000, 2800.000, 68.000]
-	"c11m2_offices" : [7960.000, 6216.000, 41.000, -5368.000, -3016.000, 41.000]
-	"c11m3_garage" : [-414.598, 3561.070, 320.000, -414.598, 3561.070, 320.000]
-	"c11m4_terminal" : [3441.120, 4525.300, 161.000, -6558.880, 12025.300, 161.000]
-	"c12m1_hilltop" : [-6527.000, -6768.000, 357.281, -6527.000, -6768.000, 357.281]
-	"c12m2_traintunnel" : [-970.000, -10378.000, -58.719, -970.000, -10378.000, -58.719]
-	"c12m3_bridge" : [7724.610, -11362.000, 449.000, 7724.610, -11362.000, 449.000]
-	"c12m4_barn" : [10442.000, -354.553, -5.000, 10442.000, -354.553, -5.000]
-	"c13m1_alpinecreek" : [1125.000, -966.000, 360.000, 8629.000, 7338.000, 504.000]
-	"c13m2_southpinestream" : [326.000, 8807.000, -397.000, -4338.000, -5157.000, 104.000]
-	"c13m3_memorialbridge" : [6314.500, -6065.600, 402.000, -3616.000, -9356.000, 376.000]
-	"c14m1_junkyard" : [-3184.000, 10432.000, -64.000, 2160.000, -960.000, 512.000]
-};
+	g_aPropPhysicsModels <-
+	[
+		"models/props_junk/gascan001a.mdl"
+		"models/props_equipment/oxygentank01.mdl"
+		"models/props_junk/propanecanister001a.mdl"
+		"models/props_junk/explosive_box001.mdl"
+		"models/w_models/weapons/w_cola.mdl"
+		"models/props_junk/gnome.mdl"
+	];
+
+	g_aUseEntitiesList <-
+	[
+		"prop_door_rotating_checkpoint"
+		"prop_door_rotating"
+		"upgrade_laser_sight"
+		"upgrade_ammo_explosive"
+		"upgrade_ammo_incendiary"
+		"func_button"
+	];
+
+	g_aPrimaryWeaponList <-
+	[
+		"weapon_shotgun_chrome"
+		"weapon_pumpshotgun"
+		"weapon_shotgun_spas"
+		"weapon_autoshotgun"
+		"weapon_smg"
+		"weapon_smg_silenced"
+		"weapon_rifle"
+		"weapon_rifle_ak47"
+		"weapon_rifle_desert"
+		"weapon_hunting_rifle"
+		"weapon_sniper_military"
+		"weapon_rifle_m60"
+		"weapon_grenade_launcher"
+		"weapon_smg_mp5"
+		"weapon_rifle_sg552"
+		"weapon_sniper_scout"
+		"weapon_sniper_awp"
+	];
+
+	g_tItems <-
+	{
+		"ammo" : {classname = "weapon_ammo_spawn", model = "models/props/terror/ammo_stack.mdl"}
+		"ammo_l4d" : {classname = "weapon_ammo_spawn", model = "models/props_unique/spawn_apartment/coffeeammo.mdl"}
+		"upgradepack_incendiary" : {classname = "weapon_upgradepack_incendiary_spawn", model = "models/w_models/weapons/w_eq_incendiary_ammopack.mdl"}
+		"upgradepack_explosive" : {classname = "weapon_upgradepack_explosive_spawn", model = "models/w_models/weapons/w_eq_explosive_ammopack.mdl"}
+		"upgrade_ammo_incendiary" : {classname = "upgrade_ammo_incendiary", model = "models/props/terror/incendiary_ammo.mdl"}
+		"upgrade_ammo_explosive" : {classname = "upgrade_ammo_explosive", model = "models/props/terror/exploding_ammo.mdl"}
+		"upgrade_laser_sight" : {classname = "upgrade_laser_sight", model = "models/w_models/Weapons/w_laser_sights.mdl"}
+		"pistol" : {classname = "weapon_pistol_spawn", model = "models/w_models/weapons/w_pistol_B.mdl"}
+		"pistol_magnum" : {classname = "weapon_pistol_magnum_spawn", model = "models/w_models/weapons/w_desert_eagle.mdl"}
+		"adrenaline" : {classname = "weapon_adrenaline_spawn", model = "models/w_models/weapons/w_eq_adrenaline.mdl"}
+		"pain_pills" : {classname = "weapon_pain_pills_spawn", model = "models/w_models/weapons/w_eq_painpills.mdl"}
+		"vomitjar" : {classname = "weapon_vomitjar_spawn", model = "models/w_models/weapons/w_eq_bile_flask.mdl"}
+		"pipe_bomb" : {classname = "weapon_pipe_bomb_spawn", model = "models/w_models/weapons/w_eq_pipebomb.mdl"}
+		"molotov" : {classname = "weapon_molotov_spawn", model = "models/w_models/weapons/w_eq_molotov.mdl"}
+		"defibrillator" : {classname = "weapon_defibrillator_spawn", model = "models/w_models/weapons/w_eq_defibrillator.mdl"}
+		"first_aid_kit" : {classname = "weapon_first_aid_kit_spawn", model = "models/w_models/weapons/w_eq_Medkit.mdl"}
+		"shotgun_chrome" : {classname = "weapon_shotgun_chrome_spawn", model = "models/w_models/weapons/w_pumpshotgun_A.mdl"}
+		"pumpshotgun" : {classname = "weapon_pumpshotgun_spawn", model = "models/w_models/weapons/w_shotgun.mdl"}
+		"shotgun_spas" : {classname = "weapon_shotgun_spas_spawn", model = "models/w_models/weapons/w_shotgun_spas.mdl"}
+		"autoshotgun" : {classname = "weapon_autoshotgun_spawn", model = "models/w_models/weapons/w_autoshot_m4super.mdl"}
+		"smg" : {classname = "weapon_smg_spawn", model = "models/w_models/weapons/w_smg_uzi.mdl"}
+		"smg_silenced" : {classname = "weapon_smg_silenced_spawn", model = "models/w_models/weapons/w_smg_a.mdl"}
+		"smg_mp5" : {classname = "weapon_smg_mp5", model = "models/w_models/weapons/w_smg_mp5.mdl"}
+		"rifle" : {classname = "weapon_rifle_spawn", model = "models/w_models/weapons/w_rifle_m16a2.mdl"}
+		"rifle_ak47" : {classname = "weapon_rifle_ak47_spawn", model = "models/w_models/weapons/w_rifle_ak47.mdl"}
+		"rifle_desert" : {classname = "weapon_rifle_desert_spawn", model = "models/w_models/weapons/w_desert_rifle.mdl"}
+		"rifle_sg552" : {classname = "weapon_rifle_sg552", model = "models/w_models/weapons/w_rifle_sg552.mdl"}
+		"hunting_rifle" : {classname = "weapon_hunting_rifle_spawn", model = "models/w_models/weapons/w_sniper_mini14.mdl"}
+		"sniper_military" : {classname = "weapon_sniper_military_spawn", model = "models/w_models/weapons/w_sniper_military.mdl"}
+		"sniper_scout" : {classname = "weapon_sniper_scout", model = "models/w_models/weapons/w_sniper_scout.mdl"}
+		"sniper_awp" : {classname = "weapon_sniper_awp", model = "models/w_models/weapons/w_sniper_awp.mdl"}
+		"rifle_m60" : {classname = "weapon_rifle_m60_spawn", model = "models/w_models/weapons/w_m60.mdl"}
+		"grenade_launcher" : {classname = "weapon_grenade_launcher_spawn", model = "models/w_models/weapons/w_grenade_launcher.mdl"}
+		"chainsaw" : {classname = "weapon_chainsaw_spawn", model = "models/weapons/melee/w_chainsaw.mdl"}
+		"gascan" : {classname = "prop_physics", model = "models/props_junk/gascan001a.mdl"}
+		"propanetank" : {classname = "prop_physics", model = "models/props_junk/propanecanister001a.mdl"}
+		"oxygentank" : {classname = "prop_physics", model = "models/props_equipment/oxygentank01.mdl"}
+		"fireworkcrate" : {classname = "prop_physics", model = "models/props_junk/explosive_box001.mdl"}
+		"cola_bottles" : {classname = "prop_physics", model = "models/w_models/weapons/w_cola.mdl"}
+		"gascan_scavenge" : {classname = "weapon_scavenge_item_spawn", model = "models/props_junk/gascan001a.mdl"}
+		"baseball_bat" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_bat.mdl"}
+		"cricket_bat" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_cricket_bat.mdl"}
+		"crowbar" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_crowbar.mdl"}
+		"electric_guitar" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_electric_guitar.mdl"}
+		"fireaxe" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_fireaxe.mdl"}
+		"frying_pan" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_frying_pan.mdl"}
+		"golfclub" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_golfclub.mdl"}
+		"katana" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_katana.mdl"}
+		"machete" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_machete.mdl"}
+		"tonfa" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_tonfa.mdl"}
+		"shovel" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_shovel.mdl"}
+		"pitchfork" : {classname = "weapon_melee_spawn", model = "models/weapons/melee/w_pitchfork.mdl"}
+		"knife" : {classname = "weapon_melee_spawn", model = "models/w_models/weapons/w_knife_t.mdl"}
+	};
+
+	g_tTransitionLandmarks <-
+	{
+		"c1m1_hotel" : [2136.000, 4472.000, 1248.000, 2504.000, 5128.000, 512.000]
+		"c1m2_streets" : [-7456.000, -4688.000, 448.000, 6758.820, -1426.180, 88.000]
+		"c1m3_mall" : [-2048.000, -4576.000, 592.002, -2048.000, -4576.000, 592.002]
+		"c2m1_highway" : [-880.000, -2592.000, -1028.000, 1653.000, 2786.000, 60.000]
+		"c2m2_fairgrounds" : [-4864.000, -5504.000, 0.000, 4080.000, 2048.000, 0.000]
+		"c2m3_coaster" : [-5248.000, 1664.000, 72.000, 3120.000, 3584.000, -120.000]
+		"c2m4_barns" : [-896.000, 2240.000, -176.000, -896.000, 2240.000, -176.000]
+		"c3m1_plankcountry" : [-2672.000, 400.000, 116.000, -8176.000, 7472.000, 72.000]
+		"c3m2_swamp" : [7523.000, -960.000, 192.000, -5789.000, 2112.000, 192.000]
+		"c3m3_shantytown" : [5008.000, -3776.000, 366.809, -5104.000, -1664.000, -81.191]
+		"c4m1_milltown_a" : [4032.000, -1600.000, 296.250, 3776.000, -1728.000, 296.500]
+		"c4m2_sugarmill_a" : [-1773.400, -13698.300, 138.250, -1773.400, -13698.300, 138.000]
+		"c4m3_sugarmill_b" : [3776.000, -1728.000, 296.250, 4032.000, -1600.000, 296.250]
+		"c4m4_milltown_b" : [4032.000, -1600.000, 296.250, 4032.000, -1600.000, 296.250]
+		"c5m1_waterfront" : [-3904.000, -1264.000, -288.000, -3904.000, -1264.000, -288.000]
+		"c5m2_park" : [-9856.000, -8032.000, -208.000, 6272.000, 8352.000, 48.000]
+		"c5m3_cemetery" : [7240.000, -9664.000, 113.000, -3296.000, 4792.000, 77.000]
+		"c5m4_quarter" : [1520.000, -3608.000, 128.000, -11984.000, 5760.000, 192.000]
+		"c6m1_riverbank" : [-3960.950, 1376.150, 744.000, 3239.050, -1231.850, -280.000]
+		"c6m2_bedlam" : [11272.000, 5056.000, -568.000, -2392.000, -464.000, -192.000]
+		"c7m1_docks" : [1871.690, 2437.110, 184.000, 10703.700, 2437.110, 184.000]
+		"c7m2_barge" : [-11080.300, 3123.700, 184.000, 1175.680, 3243.700, 176.000]
+		"c8m1_apartment" : [2948.000, 3084.000, -219.023, 2948.000, 3084.000, 36.977]
+		"c8m2_subway" : [10832.000, 4736.000, 41.000, 10832.000, 4736.000, 41.000]
+		"c8m3_sewers" : [12469.500, 12559.000, 25.000, 12469.500, 12559.000, 25.000]
+		"c8m4_interior" : [11555.400, 14884.600, 5545.000, 5539.400, 8356.600, 5545.000]
+		"c9m1_alleys" : [281.000, -1356.000, -156.000, 280.000, -1292.000, -156.000]
+		"c10m1_caves" : [-10912.000, -4962.410, 370.000, -11200.000, -8994.410, -510.000]
+		"c10m2_drainage" : [-8211.000, -5502.000, -23.000, -8212.000, -5502.000, -17.000]
+		"c10m3_ranchhouse" : [-2640.000, -128.000, 168.000, -3152.000, -128.000, 168.000]
+		"c10m4_mainstreet" : [1240.000, -5440.000, -15.000, 1960.000, 4576.000, -23.000]
+		"c11m1_greenhouse" : [5264.000, 2800.000, 68.000, 5264.000, 2800.000, 68.000]
+		"c11m2_offices" : [7960.000, 6216.000, 41.000, -5368.000, -3016.000, 41.000]
+		"c11m3_garage" : [-414.598, 3561.070, 320.000, -414.598, 3561.070, 320.000]
+		"c11m4_terminal" : [3441.120, 4525.300, 161.000, -6558.880, 12025.300, 161.000]
+		"c12m1_hilltop" : [-6527.000, -6768.000, 357.281, -6527.000, -6768.000, 357.281]
+		"c12m2_traintunnel" : [-970.000, -10378.000, -58.719, -970.000, -10378.000, -58.719]
+		"c12m3_bridge" : [7724.610, -11362.000, 449.000, 7724.610, -11362.000, 449.000]
+		"c12m4_barn" : [10442.000, -354.553, -5.000, 10442.000, -354.553, -5.000]
+		"c13m1_alpinecreek" : [1125.000, -966.000, 360.000, 8629.000, 7338.000, 504.000]
+		"c13m2_southpinestream" : [326.000, 8807.000, -397.000, -4338.000, -5157.000, 104.000]
+		"c13m3_memorialbridge" : [6314.500, -6065.600, 402.000, -3616.000, -9356.000, 376.000]
+		"c14m1_junkyard" : [-3184.000, 10432.000, -64.000, 2160.000, -960.000, 512.000]
+	};
+}
 
 __tGameEventsListener <-
 {
@@ -355,7 +359,7 @@ function SpawnBarrel(vecOrigin, eAngles = null)
 	return SpawnEntityFromTable("prop_fuel_barrel", {
 		origin = vecOrigin
 		angles = kvstr(eAngles)
-		targetname = "__barrel__"
+		targetname = "task_ent_barrel"
 		model = "models/props_industrial/barrel_fuel.mdl"
 		BasePiece = "models/props_industrial/barrel_fuel_partb.mdl"
 		FlyingPiece01 = "models/props_industrial/barrel_fuel_parta.mdl"
@@ -365,29 +369,49 @@ function SpawnBarrel(vecOrigin, eAngles = null)
 	});
 }
 
-function SpawnItem(sName, vecOrigin, eAngles = null, iCount = 1, flRadius = 0.0, bPhysicsWeapon = false, sTargetName = null)
+function SpawnItem(sName, vecOrigin, eAngles = null, iCount = 1, flRadius = 0.0, bPhysicsWeapon = false, sTargetName = "task_ent_item")
 {
 	if (sName in g_tItems)
 	{
 		if (!eAngles) eAngles = QAngle(0, RandomInt(0, 360), 0);
-		if (!sTargetName) sTargetName = "__speedrun_item__";
 		if (iCount <= 0) iCount = 1;
-		if (flRadius > 0) RemoveItemWithin(vecOrigin, 5.0);
+		if (flRadius > 0) RemoveItemWithin(vecOrigin, flRadius);
 		local sClass = g_tItems[sName]["classname"];
 		local tParams = {targetname = sTargetName, origin = vecOrigin, angles = kvstr(eAngles)};
 		tParams.rawset((sClass != "prop_physics" ? "count" : "model"), (sClass != "prop_physics" ? iCount : g_tItems[sName]["model"]));
 		if (sName == "ammo" || sName == "ammo_l4d")
 		{
-			tParams.rawset("model", g_tItems[sName]["model"]);
+			tParams["model"] <- g_tItems[sName]["model"];
 		}
 		else if (sClass == "weapon_melee_spawn")
 		{
-			tParams.rawset("melee_weapon", sName);
+			tParams["melee_weapon"] <- sName;
 		}
 		else if (bPhysicsWeapon)
 		{
-			if (sClass.find("_spawn") != null) sClass = sClass.slice(0, -6);
-			else if (sName == "cola_bottles") sClass = "weapon_cola_bottles";
+			if (sName == "gascan_scavenge")
+			{
+				sClass = "weapon_gascan";
+				tParams["skin"] <- 1;
+			}
+			else if (sClass.find("_spawn") != null)
+			{
+				sClass = sClass.slice(0, -6);
+			}
+			else if (sName == "cola_bottles")
+			{
+				sClass = "weapon_cola_bottles";
+			}
+		}
+		else if (sName == "gascan_scavenge")
+		{
+			local hEntity;
+			tParams["model"] <- g_tItems[sName]["model"];
+			tParams["glowstate"] <- 0;
+			tParams["spawnflags"] <- 2;
+			tParams["disableshadows"] <- 1;
+			AcceptEntityInput(hEntity = SpawnEntityFromTable(sClass, tParams), "SpawnItem");
+			return hEntity; // AcceptEntityInput(hEntity, "TurnGlowsOn");
 		}
 		return SpawnEntityFromTable(sClass, tParams);
 	}
@@ -398,16 +422,36 @@ function SpawnZombie(sName, vecOrigin, eAngles = null, bIdle = false, bRush = fa
 {
 	if (sName in tZombieList)
 	{
-		if (!eAngles) eAngles = QAngle(0, RandomInt(0, 360), 0);
+		local sTargetName = "task_zombie_si";
+		switch (sName)
+		{
+			case "tank":
+			case "witch":
+			case "witch_bridge":
+				sTargetName = "task_zombie_boss";
+				break;
+			case "infected":
+				sTargetName = "task_zombie_ci";
+				break;
+		}
+		if (sTargetName[12] == 98 && "ProhibitBosses" in g_ModeScript.LocalScript.DirectorOptions && g_ModeScript.LocalScript.DirectorOptions.ProhibitBosses)
+		{
+			SayMsg("[SpawnZombie] Bosses are prohibited to spawn on this map!");
+			return;
+		}
+		if (!eAngles)
+		{
+			eAngles = QAngle(0, RandomInt(0, 360), 0);
+		}
 		if (sName == "infected" && !bFastSpawn)
 		{
-			local hEntity = SpawnEntityFromTable("infected", {origin = vecOrigin, angles = kvstr(eAngles)});
+			local hEntity = SpawnEntityFromTable("infected", {origin = vecOrigin, angles = kvstr(eAngles), targetname = sTargetName});
 			if (bIdle) ReapplyInfectedFlags(INFECTED_FLAG_CANT_SEE_SURVIVORS | INFECTED_FLAG_CANT_HEAR_SURVIVORS | INFECTED_FLAG_CANT_FEEL_SURVIVORS, hEntity);
 			else if (bRush) NetProps.SetPropInt(hEntity, "m_mobRush", 1);
 			return hEntity;
 		}
 		local sClass = sName;
-		if (sName != "infected" && sName != "witch" && sName != "witch_bridge")
+		if (["infected", "witch", "witch_bridge"].find(sName) == null)
 		{
 			sClass = "player";
 		}
@@ -434,6 +478,7 @@ function SpawnZombie(sName, vecOrigin, eAngles = null, bIdle = false, bRush = fa
 					if (bIdle) ReapplyInfectedFlags(INFECTED_FLAG_CANT_SEE_SURVIVORS | INFECTED_FLAG_CANT_HEAR_SURVIVORS | INFECTED_FLAG_CANT_FEEL_SURVIVORS, hEntity);
 					else if (bRush) NetProps.SetPropInt(hEntity, "m_mobRush", 1);
 				}
+				hEntity.__KeyValueFromString("targetname", sTargetName);
 				return hEntity;
 			}
 		}
@@ -463,6 +508,7 @@ function SpawnCommon(sName, vecOrigin, eAngles = null, flDelay = 0.0)
 			local hEntity = SpawnEntityFromTable("commentary_zombie_spawner", {origin = vecOrigin, angles = kvstr(eAngles)});
 			AcceptEntityInput(hEntity, "SpawnZombie", sName, flDelay);
 			AcceptEntityInput(hEntity, "Kill", "", flDelay);
+			return;
 		}
 	}
 	printl("[SpawnCommon] Invalid argument");
@@ -496,7 +542,7 @@ function SpawnCommonWithBile(vecOrigin, eAngles = null, bIgnoreCEDAPopulation = 
 	}, aEntities);
 }
 
-function SpawnCommonForCB(vecOrigin, eAngles = null, flAttackDelay = 0.0, hTarget = null, bIgnoreDistance = false, sTargetName = "__common_for_cb__")
+function SpawnCommonForCB(vecOrigin, eAngles = null, flAttackDelay = 0.0, hTarget = null, bIgnoreDistance = false, sTargetName = "task_ent_cb")
 {
 	if (!eAngles) eAngles = QAngle(0, RandomInt(0, 360), 0);
 	local hEntity = SpawnEntityFromTable("infected", {targetname = sTargetName, origin = vecOrigin, angles = kvstr(eAngles)});
@@ -521,11 +567,11 @@ function SpawnTrigger(sName, vecOrigin, vecMaxs = Vector(64, 64, 128), vecMins =
 		origin = vecOrigin
 		spawnflags = iType
 	});
+	hEntity.ValidateScriptScope();
 	hEntity.__KeyValueFromVector("maxs", vecMaxs);
 	hEntity.__KeyValueFromVector("mins", vecMins);
 	hEntity.__KeyValueFromInt("solid", 2);
-	hEntity.__KeyValueFromString(sOutput, format("!caller,RunScriptCode,%s()", sFunction));
-	hEntity.ValidateScriptScope();
+	if (sFunction) hEntity.__KeyValueFromString(sOutput, format("!caller,RunScriptCode,%s()", sFunction));
 	if (iType & TR_OFF) AcceptEntityInput(hEntity, "Disable");
 	return hEntity;
 }
@@ -541,10 +587,29 @@ function RemoveItemByName(sName)
 	if (sName in g_tItems)
 	{
 		local hEntity;
-		while (hEntity = Entities.FindByModel(hEntity, g_tItems[sName]["model"]))
+		if (sName == "gascan_scavenge")
 		{
-			hEntity.Kill();
-			iCount++;
+			while (hEntity = Entities.FindByClassname(hEntity, "weapon_scavenge_item_spawn"))
+			{
+				hEntity.Kill();
+				iCount++;
+			}
+			while (hEntity = Entities.FindByClassname(hEntity, "weapon_gascan"))
+			{
+				if (NetProps.GetPropInt(hEntity, "m_nSkin") == 1)
+				{
+					hEntity.Kill();
+					iCount++;
+				}
+			}
+		}
+		else
+		{
+			while (hEntity = Entities.FindByModel(hEntity, g_tItems[sName]["model"]))
+			{
+				hEntity.Kill();
+				iCount++;
+			}
 		}
 		return iCount;
 	}
@@ -562,7 +627,7 @@ function RemoveItemWithin(vecPos, flRadius)
 		{
 			foreach (tbl in g_tItems)
 			{
-				if (NetProps.GetPropString(hEntity, "m_ModelName") == tbl["model"])
+				if (NetProps.GetPropString(hEntity, "m_ModelName") == tbl["model"] || sClass == "weapon_scavenge_item_spawn")
 				{
 					hEntity.Kill();
 					iCount++;
@@ -576,7 +641,7 @@ function RemoveItemWithin(vecPos, flRadius)
 
 function TakeItem(hPlayer, hItem, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false)
 {
-    local sClass = hItem.GetClassname();
+	local sClass = hItem.GetClassname();
 	if ((sClass.find("weapon_") != null && sClass.find("_weapon_") == null) || sClass == "prop_physics")
 	{
 		if (sClass == "prop_physics")
@@ -605,9 +670,9 @@ function TakeItem(hPlayer, hItem, bSetPreviousAngles = true, bSetVelocityDirecti
 
 function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false, bFindNearestItem = true, sClassname = null)
 {
-    local hEntity, lastEnt;
-    while (hEntity = Entities.Next(hEntity))
-    {
+	local hEntity, lastEnt;
+	while (hEntity = Entities.Next(hEntity))
+	{
 		local sClass = hEntity.GetClassname();
 		if ((sClass.find("weapon_") != null && sClass.find("_weapon_") == null) || sClass == "prop_physics")
 		{
@@ -634,9 +699,9 @@ function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirecti
 				}
 			}
 		}
-    }
-    if (lastEnt)
-    {
+	}
+	if (lastEnt)
+	{
 		local eAngles = hPlayer.EyeAngles();
 		TP(hPlayer, null, lastEnt.GetOrigin() - hPlayer.EyePosition(), null, true);
 		hPlayer.PressButton(IN_USE);
@@ -649,7 +714,7 @@ function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirecti
 			local vecVel = hPlayer.GetVelocity();
 			if (vecVel.x != 0 || vecVel.y != 0) RunNextTickFunction(TP, hPlayer, null, QAngle(eAngles.x, atan2(vecVel.y, vecVel.x) * Math.Rad2Deg), null);
 		}
-    }
+	}
 }
 
 function TakeNearestItemByClassname(hPlayer, sClassname, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false)
@@ -659,7 +724,7 @@ function TakeNearestItemByClassname(hPlayer, sClassname, bSetPreviousAngles = tr
 
 function UseEntity(hPlayer, hEntity, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false)
 {
-    local sClass = hEntity.GetClassname();
+	local sClass = hEntity.GetClassname();
 	if (g_aUseEntitiesList.find(sClass) != null)
 	{
 		if (sClass == "func_button" || sClass == "prop_door_rotating") if (NetProps.GetPropInt(hEntity, "m_bLocked")) return;
@@ -695,9 +760,9 @@ function UseEntity(hPlayer, hEntity, bSetPreviousAngles = true, bSetVelocityDire
 
 function UseNearestEntity(hPlayer, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false, bFindNearestEntity = true, sClassname = null)
 {
-    local hEntity, lastEnt;
-    while (hEntity = Entities.Next(hEntity))
-    {
+	local hEntity, lastEnt;
+	while (hEntity = Entities.Next(hEntity))
+	{
 		local sClass = hEntity.GetClassname();
 		if (g_aUseEntitiesList.find(sClass) != null)
 		{
@@ -726,9 +791,9 @@ function UseNearestEntity(hPlayer, bSetPreviousAngles = true, bSetVelocityDirect
 				}
 			}
 		}
-    }
-    if (lastEnt)
-    {
+	}
+	if (lastEnt)
+	{
 		local eAngles = hPlayer.EyeAngles();
 		local sClass = lastEnt.GetClassname();
 		TP(hPlayer, null, lastEnt.GetOrigin() - hPlayer.EyePosition(), null, true);
@@ -747,7 +812,7 @@ function UseNearestEntity(hPlayer, bSetPreviousAngles = true, bSetVelocityDirect
 			local vecVel = hPlayer.GetVelocity();
 			if (vecVel.x != 0 || vecVel.y != 0) RunNextTickFunction(TP, hPlayer, null, QAngle(eAngles.x, atan2(vecVel.y, vecVel.x) * Math.Rad2Deg), null);
 		}
-    }
+	}
 }
 
 function UseNearestEntityByClassname(hPlayer, sClassname, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false)
@@ -982,7 +1047,7 @@ function DebugItems(sItemName = null)
 					printf("[Debug Items] Specific item (idx %d) found: %s", hEntity.GetEntityIndex(), ("setpos_exact " + kvstr(hEntity.GetOrigin())));
 				}
 				SpawnEntityFromTable("prop_dynamic", {
-					targetname = "__debug_item__" + sClass
+					targetname = "task_debug_" + sClass
 					model = "models/extras/info_speech.mdl"
 					glowstate = 3
 					disableshadows = 1
@@ -1455,8 +1520,17 @@ function AutoBoost_Think()
 	}
 }
 
+function Bosses_Watchdog()
+{
+	if ("ProhibitBosses" in g_ModeScript.LocalScript.DirectorOptions && g_ModeScript.LocalScript.DirectorOptions.ProhibitBosses && Entities.FindByName(null, "task_zombie_boss"))
+	{
+		SayMsg("[Warning] Bosses are prohibited to spawn now!");
+	}
+}
+
 RegisterOnTickFunction("AutoClimb_Think");
 RegisterOnTickFunction("AutoBoost_Think");
+RegisterLoopFunction("Bosses_Watchdog", 5.0);
 
 HookEvent("weapon_fire", __tGameEventsListener.OnWeaponFire, __tGameEventsListener);
 HookEvent("tank_spawn", __tGameEventsListener.OnTankSpawn, __tGameEventsListener);
