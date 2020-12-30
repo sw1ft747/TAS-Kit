@@ -120,10 +120,11 @@ if (!("g_aOfficialMaps" in getroottable()))
 		"c7m3_port"
 	];
 
-	::g_bOfficialMap <- g_aOfficialMaps.find(SessionState["MapName"]) != null;
-	::g_bBeginMap <- g_aOfficialBeginMaps.find(SessionState["MapName"]) != null;
-	::g_bMapWithLongestAggressiveDistance <- g_aOfficialMapsWithLongestAggressiveDistance.find(SessionState["MapName"]) != null;
-	::g_bContainsCEDAPopulation <- g_aCEDAPopulationMaps.find(SessionState["MapName"]) != null;
+	g_sMapName <- SessionState["MapName"];
+	g_bOfficialMap <- g_aOfficialMaps.find(g_sMapName) != null;
+	g_bBeginMap <- g_aOfficialBeginMaps.find(g_sMapName) != null;
+	g_bMapWithLongestAggressiveDistance <- g_aOfficialMapsWithLongestAggressiveDistance.find(g_sMapName) != null;
+	g_bContainsCEDAPopulation <- g_aCEDAPopulationMaps.find(g_sMapName) != null;
 }
 
 function SetTriggerPoint()
