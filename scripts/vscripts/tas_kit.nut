@@ -5,6 +5,7 @@
 const __TAS_KIT_VER__ = "1.0"
 const __MAIN_PATH__ = "tas_kit/"
 
+IncludeScript("modules/helper_utils");
 IncludeScript("modules/skipintro");
 IncludeScript("modules/tls");
 IncludeScript("modules/autosb");
@@ -13,7 +14,6 @@ IncludeScript("modules/tools");
 IncludeScript("modules/custom_spawn");
 IncludeScript("modules/speedrunner_tools");
 IncludeScript("modules/chat_commands");
-IncludeScript("modules/helper_utils");
 
 cvar("sv_cheats", 1);
 cvar("sv_client_min_interp_ratio", 0);
@@ -56,7 +56,8 @@ function UpdateDataTable(tData)
 
 if (!("g_tDataTable" in this))
 {
-	g_tDataTable <- {
+	g_tDataTable <-
+	{
 		timer = 3.0
 		fdmg = true
 		hud = true
@@ -75,7 +76,7 @@ if (!("g_tDataTable" in this))
 function OnGameplayStart()
 {
 	InitializeHUD();
-	if (SessionState["MapName"] == "c6m1_riverbank") PrecacheEntityFromTable({classname = "prop_dynamic", model = "models/infected/witch.mdl"});
+	InitializeMapParams();
 	if (g_bRestarting)
 	{
 		try {
@@ -314,10 +315,8 @@ function PrintTime()
 
 function InitializeHooks()
 {
-	if (SessionState["MapName"] == "c5m5_bridge")
-		EntFire("trigger_heli", "AddOutput", "OnEntireTeamStartTouch !caller,RunScriptCode,PrintTime()");
-	else if (SessionState["MapName"] == "c13m4_cutthroatcreek")
-		EntFire("trigger_boat", "AddOutput", "OnEntireTeamStartTouch !caller,RunScriptCode,PrintTime()");
+	if (g_sMapName == "c5m5_bridge") EntFire("trigger_heli", "AddOutput", "OnEntireTeamStartTouch !caller,RunScriptCode,PrintTime()");
+	if (g_sMapName == "c13m4_cutthroatcreek") EntFire("trigger_boat", "AddOutput", "OnEntireTeamStartTouch !caller,RunScriptCode,PrintTime()");
 
 	EntFire("prop_door_rotating_checkpoint", "AddOutput", "OnFullyClosed !caller,RunScriptCode,OnCheckpointDoorClosed()");
 	EntFire("info_changelevel", "AddOutput", "OnStartTouch !caller,RunScriptCode,OnCheckpointDoorClosed()");
@@ -326,6 +325,81 @@ function InitializeHooks()
 	HookEvent("player_disconnect", __tEvents.OnPlayerDisconnect, __tEvents);
 	HookEvent("finale_vehicle_leaving", __tEvents.OnFinaleVehicleLeaving, __tEvents);
 	HookEvent("map_transition", __tEvents.OnMapTransition, __tEvents);
+}
+
+function InitializeMapParams()
+{
+	switch (g_sMapName)
+	{
+		case "c1m3_mall":
+		{
+			// remove random mid-way path
+			local hTrigger;
+			if (hTrigger = Entities.FindByClassnameNearest("trigger_once", Vector(1608, -1056, 396), 5.0))
+			{
+				hTrigger.__KeyValueFromString("targetname", "minifinale_trigger");
+				EntFire("minifinale_trigger", "AddOutput", "OnTrigger relay_stairwell_close,Trigger", 0.5);
+				EntFire("director_query", "Kill");
+				EntFire("compare_minifinale", "Kill");
+			}
+			// remove random escalator path
+			if (hTrigger = Entities.FindByClassnameNearest("trigger_once", Vector(557.41, -2189.91, 336), 5.0))
+			{
+				hTrigger.__KeyValueFromString("targetname", "escalator_trigger");
+				EntFire("escalator_trigger", "AddOutput", "OnTrigger relay_elevator_path_06,Trigger");
+				EntFire("case_path", "Kill");
+				EntFire("relay_director_set_*", "Kill");
+				EntFire("director_query_elevator_*", "Kill");
+			}
+			break;
+		}
+		case "c2m4_barns":
+		{
+			// remove random fence
+			EntFire("randompath_1_*", "Kill");
+			break;
+		}
+		case "c2m5_concert":
+		{
+			// use left side for incoming heli, faster by ~2 seconds
+			EntFire("stadium_exit_right_relay", "Disable");
+			EntFire("stadium_exit_right_template", "Kill");
+			EntFire("stadium_exit_left_relay", "Enable");
+			EntFire("stadium_exit_left_template", "ForceSpawn");
+			break;
+		}
+		case "c5m3_cemetery":
+		{
+			// remove random cemetery path
+			EntFire("Path_*", "Kill");
+			EntFire("template_Path_C", "ForceSpawn");
+			break;
+		}
+		case "c6m1_riverbank":
+		{
+			PrecacheEntityFromTable({classname = "prop_dynamic", model = "models/infected/witch.mdl"});
+			break;
+		}
+		case "c7m1_docks":
+		{
+			// custom intro with 3 biles for convenient start
+			local flCvarValue = cvar("sv_infected_ceda_vomitjar_probability");
+			EntFire("infected_spawner", "Kill");
+			cvar("sv_infected_ceda_vomitjar_probability", 0.0);
+			SpawnCommonWithBile(Vector(13716.000, 3108.000, 44.000), QAngle(0.000, 208.500, 0.000));
+			SpawnCommonWithBile(Vector(13556.000, 2480.000, 44.000), QAngle(0.000, 148.500, 0.000));
+			SpawnCommonWithBile(Vector(13572.000, 2674.000, 44.000), QAngle(0.000, 133.500, 0.000));
+			SpawnCommon("common_male_tankTop_jeans", Vector(13440.000, 2496.000, 44.000), QAngle(0.000, 137.000, 0.000));
+			SpawnCommon("common_male_tankTop_jeans", Vector(13444.000, 2858.000, 44.000), QAngle(0.000, 253.500, 0.000));
+			SpawnCommon("common_female_tankTop_jeans", Vector(13392.000, 2662.000, 44.000), QAngle(0.000, 193.500, 0.000));
+			SpawnCommon("common_female_tankTop_jeans", Vector(13061.300, 2490.920, 36.065), QAngle(0.000, 103.500, 0.000));
+			SpawnCommon("common_male_ceda", Vector(13934.000, 2962.000, 47.000), QAngle(0.000, 208.500, 0.000));
+			SpawnCommon("common_male_ceda", Vector(13224.000, 2660.000, 42.214), QAngle(0.000, 343.500, 0.000));
+			SpawnCommon("common_male_ceda", Vector(13425.500, 2935.290, 80.000), QAngle(0.000, 173.500, 0.000));
+			CreateTimer(0.01, cvar, "sv_infected_ceda_vomitjar_probability", flCvarValue);
+			break;
+		}
+	}
 }
 
 function InitializeHUD()
@@ -384,8 +458,8 @@ function Countdown(iValue)
 	{
 		Countdown_Think();
 		RegisterOnTickFunction("Countdown_Think");
-		CreateTimer(g_tDataTable["timer"] / 3, Countdown, 2);
-		CreateTimer(g_tDataTable["timer"] / 3 * 2, Countdown, 1);
+		CreateTimer(g_tDataTable["timer"] / 3.0, Countdown, 2);
+		CreateTimer(g_tDataTable["timer"] / 3.0 * 2, Countdown, 1);
 		CreateTimer(g_tDataTable["timer"], Countdown, 0);
 	}
 	if (iValue == 0)
@@ -395,7 +469,7 @@ function Countdown(iValue)
 		local hPlayer;
 		local bFreezeL4D1Survivors = false;
 		local aL4D1Characters = ["Louis", "Zoey", "Bill", "Francis"];
-		if (["c6m1_riverbank", "c6m3_port"].find(SessionState["MapName"]) != null)
+		if (["c6m1_riverbank", "c6m3_port"].find(g_sMapName) != null)
 		{
 			bFreezeL4D1Survivors = true;
 		}
@@ -403,12 +477,9 @@ function Countdown(iValue)
 		{
 			if (hPlayer.IsSurvivor())
 			{
-				if (bFreezeL4D1Survivors)
+				if (bFreezeL4D1Survivors && IsPlayerABot(hPlayer) && aL4D1Characters.find(hPlayer.GetPlayerName()) != null)
 				{
-					if (IsPlayerABot(hPlayer) && aL4D1Characters.find(hPlayer.GetPlayerName()) != null)
-					{
-						continue;
-					}
+					continue;
 				}
 				NetProps.SetPropInt(hPlayer, "m_fFlags", NetProps.GetPropInt(hPlayer, "m_fFlags") & ~FL_FROZEN);
 				AcceptEntityInput(hPlayer, "DisableLedgeHang");
