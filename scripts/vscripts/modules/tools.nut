@@ -1040,7 +1040,12 @@ function DebugItems(sItemName = null)
 			{
 				if (sItemName)
 				{
-					if (!sModel && sClass.find(sItemName) == null)
+					if (sItemName in g_tItems)
+					{
+						if (NetProps.GetPropString(hEntity, "m_ModelName") != g_tItems[sItemName]["model"])
+							continue;
+					}
+					else if (!sModel && sClass.find(sItemName) == null)
 					{
 						continue;
 					}
