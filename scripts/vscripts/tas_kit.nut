@@ -2,7 +2,7 @@
 // TAS Kit
 // Powered by AP
 
-const __TAS_KIT_VER__ = "1.0"
+const __TAS_KIT_VER__ = "1.0.2"
 const __MAIN_PATH__ = "tas_kit/"
 
 IncludeScript("modules/helper_utils");
@@ -331,74 +331,69 @@ function InitializeMapParams()
 {
 	switch (g_sMapName)
 	{
-		case "c1m3_mall":
+	case "c1m3_mall":
+		// remove random mid-way path
+		local hTrigger;
+		if (hTrigger = Entities.FindByClassnameNearest("trigger_once", Vector(1608, -1056, 396), 5.0))
 		{
-			// remove random mid-way path
-			local hTrigger;
-			if (hTrigger = Entities.FindByClassnameNearest("trigger_once", Vector(1608, -1056, 396), 5.0))
-			{
-				hTrigger.__KeyValueFromString("targetname", "minifinale_trigger");
-				EntFire("minifinale_trigger", "AddOutput", "OnTrigger relay_stairwell_close,Trigger", 0.5);
-				EntFire("director_query", "Kill");
-				EntFire("compare_minifinale", "Kill");
-			}
-			// remove random escalator path
-			if (hTrigger = Entities.FindByClassnameNearest("trigger_once", Vector(557.41, -2189.91, 336), 5.0))
-			{
-				hTrigger.__KeyValueFromString("targetname", "escalator_trigger");
-				EntFire("escalator_trigger", "AddOutput", "OnTrigger relay_elevator_path_06,Trigger");
-				EntFire("case_path", "Kill");
-				EntFire("relay_director_set_*", "Kill");
-				EntFire("director_query_elevator_*", "Kill");
-			}
-			break;
+			hTrigger.__KeyValueFromString("targetname", "minifinale_trigger");
+			EntFire("minifinale_trigger", "AddOutput", "OnTrigger relay_stairwell_close,Trigger", 0.5);
+			EntFire("director_query", "Kill");
+			EntFire("compare_minifinale", "Kill");
 		}
-		case "c2m4_barns":
+		// remove random escalator path
+		if (hTrigger = Entities.FindByClassnameNearest("trigger_once", Vector(557.41, -2189.91, 336), 5.0))
 		{
-			// remove random fence
-			EntFire("randompath_1_*", "Kill");
-			break;
+			hTrigger.__KeyValueFromString("targetname", "escalator_trigger");
+			EntFire("escalator_trigger", "AddOutput", "OnTrigger relay_elevator_path_06,Trigger");
+			EntFire("case_path", "Kill");
+			EntFire("relay_director_set_*", "Kill");
+			EntFire("director_query_elevator_*", "Kill");
 		}
-		case "c2m5_concert":
-		{
-			// use left side for incoming heli, faster by ~2 seconds
-			EntFire("stadium_exit_right_relay", "Disable");
-			EntFire("stadium_exit_right_template", "Kill");
-			EntFire("stadium_exit_left_relay", "Enable");
-			EntFire("stadium_exit_left_template", "ForceSpawn");
-			break;
-		}
-		case "c5m3_cemetery":
-		{
-			// remove random cemetery path
-			EntFire("Path_*", "Kill");
-			EntFire("template_Path_C", "ForceSpawn");
-			break;
-		}
-		case "c6m1_riverbank":
-		{
-			PrecacheEntityFromTable({classname = "prop_dynamic", model = "models/infected/witch.mdl"});
-			break;
-		}
-		case "c7m1_docks":
-		{
-			// custom intro with 3 biles for convenient start
-			local flCvarValue = cvar("sv_infected_ceda_vomitjar_probability");
-			EntFire("infected_spawner", "Kill");
-			cvar("sv_infected_ceda_vomitjar_probability", 0.0);
-			SpawnCommonWithBile(Vector(13716.000, 3108.000, 44.000), QAngle(0.000, 208.500, 0.000));
-			SpawnCommonWithBile(Vector(13556.000, 2480.000, 44.000), QAngle(0.000, 148.500, 0.000));
-			SpawnCommonWithBile(Vector(13572.000, 2674.000, 44.000), QAngle(0.000, 133.500, 0.000));
-			SpawnCommon("common_male_tankTop_jeans", Vector(13440.000, 2496.000, 44.000), QAngle(0.000, 137.000, 0.000));
-			SpawnCommon("common_male_tankTop_jeans", Vector(13444.000, 2858.000, 44.000), QAngle(0.000, 253.500, 0.000));
-			SpawnCommon("common_female_tankTop_jeans", Vector(13392.000, 2662.000, 44.000), QAngle(0.000, 193.500, 0.000));
-			SpawnCommon("common_female_tankTop_jeans", Vector(13061.300, 2490.920, 36.065), QAngle(0.000, 103.500, 0.000));
-			SpawnCommon("common_male_ceda", Vector(13934.000, 2962.000, 47.000), QAngle(0.000, 208.500, 0.000));
-			SpawnCommon("common_male_ceda", Vector(13224.000, 2660.000, 42.214), QAngle(0.000, 343.500, 0.000));
-			SpawnCommon("common_male_ceda", Vector(13425.500, 2935.290, 80.000), QAngle(0.000, 173.500, 0.000));
-			CreateTimer(0.01, cvar, "sv_infected_ceda_vomitjar_probability", flCvarValue);
-			break;
-		}
+		break;
+
+	case "c2m4_barns":
+		// remove random fence
+		EntFire("randompath_1_*", "Kill");
+		break;
+
+	case "c2m5_concert":
+		// use left side for incoming heli, faster by ~2 seconds
+		EntFire("stadium_exit_right_relay", "Disable");
+		EntFire("stadium_exit_right_template", "Kill");
+		EntFire("stadium_exit_left_relay", "Enable");
+		EntFire("stadium_exit_left_template", "ForceSpawn");
+		break;
+
+	case "c5m3_cemetery":
+		// remove random cemetery path
+		local hEntity;
+		if (hEntity = Entities.FindByName(null, "case_maze_config")) hEntity.Kill();
+		EntFire("Path_*", "Kill");
+		EntFire("template_Path_C", "ForceSpawn");
+		break;
+
+	case "c6m1_riverbank":
+		PrecacheEntityFromTable({classname = "prop_dynamic", model = "models/infected/witch.mdl"});
+		break;
+		
+	case "c7m1_docks":
+		// custom intro with 3 biles for convenient start
+		local flCvarValue = cvar("sv_infected_ceda_vomitjar_probability");
+		EntFire("infected_spawner", "Kill");
+		cvar("sv_infected_ceda_vomitjar_probability", 0.0);
+		SpawnCommonWithBile(Vector(13716.000, 3108.000, 44.000), QAngle(0.000, 208.500, 0.000));
+		SpawnCommonWithBile(Vector(13556.000, 2480.000, 44.000), QAngle(0.000, 148.500, 0.000));
+		SpawnCommonWithBile(Vector(13572.000, 2674.000, 44.000), QAngle(0.000, 133.500, 0.000));
+		SpawnCommon("common_male_tankTop_jeans", Vector(13440.000, 2496.000, 44.000), QAngle(0.000, 137.000, 0.000));
+		SpawnCommon("common_male_tankTop_jeans", Vector(13444.000, 2858.000, 44.000), QAngle(0.000, 253.500, 0.000));
+		SpawnCommon("common_female_tankTop_jeans", Vector(13392.000, 2662.000, 44.000), QAngle(0.000, 193.500, 0.000));
+		SpawnCommon("common_female_tankTop_jeans", Vector(13061.300, 2490.920, 36.065), QAngle(0.000, 103.500, 0.000));
+		SpawnCommon("common_male_ceda", Vector(13934.000, 2962.000, 47.000), QAngle(0.000, 208.500, 0.000));
+		SpawnCommon("common_male_ceda", Vector(13224.000, 2660.000, 42.214), QAngle(0.000, 343.500, 0.000));
+		SpawnCommon("common_male_ceda", Vector(13425.500, 2935.290, 80.000), QAngle(0.000, 173.500, 0.000));
+		CreateTimer(0.01, cvar, "sv_infected_ceda_vomitjar_probability", flCvarValue);
+		break;
 	}
 }
 
