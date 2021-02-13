@@ -171,19 +171,18 @@ __tGameEventsListener <-
 			{
 				switch (sWeapon)
 				{
-					case "gascan":
-					case "cola_bottles":
-					{
-						local idx = hPlayer.GetEntityIndex();
-						if (g_bAutoShove[idx] && !g_bFillBot[idx])
-							hPlayer.PressButton(IN_ATTACK2);
-						return;
-					}
-					case "propanetank":
-					case "oxygentank":
-					case "fireworkcrate":
-						return;
+				case "gascan":
+				case "cola_bottles":
+					local idx = hPlayer.GetEntityIndex();
+					if (g_bAutoShove[idx] && !g_bFillBot[idx]) hPlayer.SendInput(IN_ATTACK2);
+					return;
+
+				case "propanetank":
+				case "oxygentank":
+				case "fireworkcrate":
+					return;
 				}
+				
 				if (sWeapon != "pipe_bomb" && sWeapon != "molotov")
 				{
 					for (local i = 0; i < tCB["aList"].len(); i++)
@@ -200,18 +199,20 @@ __tGameEventsListener <-
 					}
 					return;
 				}
-				if (CEntity(hPlayer).KeyInScriptScope("grenadeboost"))
+				
+				if (KeyInScriptScope(hPlayer, "grenadeboost"))
 				{
-					local tParams = CEntity(hPlayer).GetScriptScopeVar("grenadeboost");
+					local tParams = GetScriptScopeVar(hPlayer, "grenadeboost");
 					TP(hPlayer, null, QAngle(tParams["angle"], hPlayer.EyeAngles().y, 0.0), null);
+
 					if (tParams["target"].len() == 0)
 					{
 						local hPlayerTemp;
 						while (hPlayerTemp = Entities.FindByClassname(hPlayerTemp, "player"))
 						{
-							if (hPlayer.IsSurvivor() && hPlayer.IsAlive() && hPlayer != hPlayerTemp && CEntity(hPlayer).GetDistance(hPlayerTemp, true) < 62500)
+							if (hPlayer.IsSurvivor() && hPlayer.IsAlive() && hPlayer != hPlayerTemp && GetDistanceToEntity(hPlayer, hPlayerTemp, true) < 62500)
 							{
-								hPlayerTemp.PressButton(IN_JUMP);
+								hPlayerTemp.SendInput(IN_JUMP);
 							}
 						}
 					}
@@ -221,16 +222,18 @@ __tGameEventsListener <-
 						{
 							if (player.IsValid())
 							{
-								player.PressButton(IN_JUMP);
+								player.SendInput(IN_JUMP);
 							}
 						}
 					}
-					if (tParams["jump"]) hPlayer.PressButton(IN_JUMP);
+
+					if (tParams["jump"]) hPlayer.SendInput(IN_JUMP);
+
 					CreateTimer(0.5, function(hPlayer){
-						if (hPlayer.IsValid())
-							NetProps.SetPropInt(hPlayer, "m_afButtonForced", 0);
+						if (hPlayer.IsValid()) NetProps.SetPropInt(hPlayer, "m_afButtonForced", 0);
 					}, hPlayer);
-					CEntity(hPlayer).RemoveScriptScopeKey("grenadeboost");
+
+					RemoveScriptScopeKey(hPlayer, "grenadeboost");
 					foreach (idx, player in g_aAutoGrenadeBoostUsers)
 					{
 						if (hPlayer == player)
@@ -248,14 +251,17 @@ __tGameEventsListener <-
 		if (tScriptedTankSpawn["bFinaleStarted"])
 		{
 			CustomSpawn.iTankCount++;
+
 			if (tScriptedTankSpawn["aScriptedSpawns"].len() > 0)
 			{
 				local hPlayer = tParams["_player"];
 				local vecOrigin = tScriptedTankSpawn["aScriptedSpawns"][0];
+
 				printf("[ScriptedTankSpawn] Changed current position of Tank (idx %d) to: %s", hPlayer.GetEntityIndex(), kvstr(vecOrigin));
 				tParams["_player"].SetOrigin(vecOrigin);
 				tScriptedTankSpawn["aScriptedSpawns"].remove(0);
 			}
+
 			if (CustomSpawn.iTankCount <= CustomSpawn.Settings.MaxTanksInFinale)
 			{
 				sayf("Tank #%d spawned at time: %f", CustomSpawn.iTankCount, Time() - g_flFinaleStartTime);
@@ -267,7 +273,9 @@ __tGameEventsListener <-
 		g_flFinaleStartTime = Time();
 		tScriptedTankSpawn["bFinaleStarted"] = true;
 		PrintCurrentTime("Finale started at time:");
+
 		if ("OnFinaleStart" in getroottable()) ::OnFinaleStart();
+
 		if (CustomSpawn.Settings.Enabled)
 		{
 			if (!IsOnTickFunctionRegistered("CustomSpawn.Think"))
@@ -287,26 +295,30 @@ tCB <-
 	aList = []
 	TriggerCI = function(hEntity, hPlayer, flDelay, bIgnoreDistance)
 	{
-		local flDistance = CEntity(hPlayer).GetDistance(hEntity);
+		local flDistance = GetDistanceToEntity(hPlayer, hEntity);
+
 		if (!bIgnoreDistance)
 		{
 			if (flDistance > 1825) return false;
 			if (!g_bMapWithLongestAggressiveDistance && flDistance > 530) return false;
 		}
+
 		if (GetAngleBetweenEntities(hEntity, hPlayer, Vector(), true) > 75) return false;
+
 		flDelay += flDistance > 235 ? ((flDistance + 185) / 700) : 0.5;
 		NetProps.SetPropInt(hEntity, "m_nSequence", RandomInt(37, 39));
+
 		if (flDelay > 0)
 		{
 			CreateTimer(flDelay, function(hEntity, hPlayer){
-				if (hEntity.IsValid() && hPlayer.IsValid())
-					SendCommandToBot(BOT_CMD_ATTACK, hEntity, hPlayer);
+				if (hEntity.IsValid() && hPlayer.IsValid()) SendCommandToBot(BOT_CMD_ATTACK, hEntity, hPlayer);
 			}, hEntity, hPlayer);
 		}
 		else
 		{
 			SendCommandToBot(BOT_CMD_ATTACK, hEntity, hPlayer)
 		}
+
 		return true;
 	}
 };
@@ -338,15 +350,18 @@ function SpawnBileEffect(vecOrigin)
 	local hGoalChase = SpawnEntityFromTable("info_goal_infected_chase", {
 		origin = vecOrigin
 	});
+
 	local hEffect = SpawnEntityFromTable("info_particle_system", {
 		origin = vecOrigin
 		start_active = 1
 		effect_name = "vomit_jar"
 	});
+
 	AcceptEntityInput(hGoalChase, "Enable");
 	AcceptEntityInput(hGoalChase, "Kill", "", 15.0);
 	AcceptEntityInput(hEffect, "Kill", "", 15.0);
 	EmitSoundOn("CedaJar.Explode", hEffect);
+
 	return {
 		effect = hEffect
 		goal_chase = hGoalChase
@@ -376,9 +391,11 @@ function SpawnItem(sName, vecOrigin, eAngles = null, iCount = 1, flRadius = 0.0,
 		if (!eAngles) eAngles = QAngle(0, RandomInt(0, 360), 0);
 		if (iCount <= 0) iCount = 1;
 		if (flRadius > 0) RemoveItemWithin(vecOrigin, flRadius);
+
 		local sClass = g_tItems[sName]["classname"];
 		local tParams = {targetname = sTargetName, origin = vecOrigin, angles = kvstr(eAngles)};
 		tParams.rawset((sClass != "prop_physics" ? "count" : "model"), (sClass != "prop_physics" ? iCount : g_tItems[sName]["model"]));
+
 		if (sName == "ammo" || sName == "ammo_l4d")
 		{
 			tParams["model"] <- g_tItems[sName]["model"];
@@ -410,6 +427,7 @@ function SpawnItem(sName, vecOrigin, eAngles = null, iCount = 1, flRadius = 0.0,
 			tParams["glowstate"] <- 0;
 			tParams["spawnflags"] <- 2;
 			tParams["disableshadows"] <- 1;
+
 			AcceptEntityInput(hEntity = SpawnEntityFromTable(sClass, tParams), "SpawnItem");
 			return hEntity; // AcceptEntityInput(hEntity, "TurnGlowsOn");
 		}
@@ -423,26 +441,31 @@ function SpawnZombie(sName, vecOrigin, eAngles = null, bIdle = false, bRush = fa
 	if (sName in tZombieList)
 	{
 		local sTargetName = "task_zombie_si";
+		
 		switch (sName)
 		{
-			case "tank":
-			case "witch":
-			case "witch_bridge":
-				sTargetName = "task_zombie_boss";
-				break;
-			case "infected":
-				sTargetName = "task_zombie_ci";
-				break;
+		case "tank":
+		case "witch":
+		case "witch_bridge":
+			sTargetName = "task_zombie_boss";
+			break;
+
+		case "infected":
+			sTargetName = "task_zombie_ci";
+			break;
 		}
+
 		if (sTargetName[12] == 98 && "ProhibitBosses" in g_ModeScript.LocalScript.DirectorOptions && g_ModeScript.LocalScript.DirectorOptions.ProhibitBosses)
 		{
-			SayMsg("[SpawnZombie] Bosses are prohibited to spawn on this map!");
+			SayMsg("[SpawnZombie] Bosses are prohibited to spawn right now!");
 			return;
 		}
+
 		if (!eAngles)
 		{
 			eAngles = QAngle(0, RandomInt(0, 360), 0);
 		}
+
 		if (sName == "infected" && !bFastSpawn)
 		{
 			local hEntity = SpawnEntityFromTable("infected", {origin = vecOrigin, angles = kvstr(eAngles), targetname = sTargetName});
@@ -450,6 +473,7 @@ function SpawnZombie(sName, vecOrigin, eAngles = null, bIdle = false, bRush = fa
 			else if (bRush) NetProps.SetPropInt(hEntity, "m_mobRush", 1);
 			return hEntity;
 		}
+
 		local sClass = sName;
 		if (["infected", "witch", "witch_bridge"].find(sName) == null)
 		{
@@ -460,10 +484,14 @@ function SpawnZombie(sName, vecOrigin, eAngles = null, bIdle = false, bRush = fa
 			sClass = "witch";
 			PrecacheEntityFromTable({classname = "prop_dynamic", model = "models/infected/witch_bride.mdl"});
 		}
+
 		local hEntity;
 		local aEntities = [];
+
 		while (hEntity = Entities.FindByClassname(hEntity, sClass)) aEntities.push(hEntity);
+
 		ZSpawn({type = tZombieList[sName], pos = vecOrigin});
+
 		while (hEntity = Entities.FindByClassname(hEntity, sClass))
 		{
 			if (aEntities.find(hEntity) == null)
@@ -518,10 +546,14 @@ function SpawnCommonWithBile(vecOrigin, eAngles = null, bIgnoreCEDAPopulation = 
 {
 	if (!bIgnoreCEDAPopulation && !g_bContainsCEDAPopulation) return;
 	if (!eAngles) eAngles = QAngle(0, RandomInt(0, 360), 0);
+
 	local hEntity;
 	local aEntities = [];
+
 	while (hEntity = Entities.FindByClassname(hEntity, "infected")) aEntities.push(hEntity);
+
 	SpawnCommon("common_male_ceda", vecOrigin, kvstr(eAngles));
+
 	CreateTimer(0.01, function(aEntities){
 		local hEntity;
 		while (hEntity = Entities.FindByClassname(hEntity, "infected"))
@@ -530,9 +562,9 @@ function SpawnCommonWithBile(vecOrigin, eAngles = null, bIgnoreCEDAPopulation = 
 			{
 				if (NetProps.GetPropString(hEntity, "m_ModelName") == "models/infected/common_male_ceda.mdl")
 				{
-					if (!CEntity(hEntity).KeyInScriptScope("spawned_with_bile"))
+					if (!KeyInScriptScope(hEntity, "spawned_with_bile"))
 					{
-						CEntity(hEntity).SetScriptScopeVar("spawned_with_bile", true);
+						SetScriptScopeVar(hEntity, "spawned_with_bile", true);
 						NetProps.SetPropInt(hEntity, "m_nFallenFlags", 1);
 						break;
 					}
@@ -545,17 +577,21 @@ function SpawnCommonWithBile(vecOrigin, eAngles = null, bIgnoreCEDAPopulation = 
 function SpawnCommonForCB(vecOrigin, eAngles = null, flAttackDelay = 0.0, hTarget = null, bIgnoreDistance = false, sTargetName = "task_ent_cb")
 {
 	if (!eAngles) eAngles = QAngle(0, RandomInt(0, 360), 0);
+
 	local hEntity = SpawnEntityFromTable("infected", {targetname = sTargetName, origin = vecOrigin, angles = kvstr(eAngles)});
 	ReapplyInfectedFlags(INFECTED_FLAG_CANT_SEE_SURVIVORS | INFECTED_FLAG_CANT_HEAR_SURVIVORS | INFECTED_FLAG_CANT_FEEL_SURVIVORS, hEntity);
+
 	if (flAttackDelay == null)
 	{
 		return hEntity;
 	}
+
 	if (hTarget)
 	{
 		tCB["TriggerCI"](hEntity, hTarget, flAttackDelay, bIgnoreDistance);
 		return hEntity;
 	}
+
 	tCB["aList"].push({common = hEntity, delay = flAttackDelay, ignore_dist = bIgnoreDistance});
 	return hEntity;
 }
@@ -567,12 +603,15 @@ function SpawnTrigger(sName, vecOrigin, vecMaxs = Vector(64, 64, 128), vecMins =
 		origin = vecOrigin
 		spawnflags = iType
 	});
+
 	hEntity.ValidateScriptScope();
 	hEntity.__KeyValueFromVector("maxs", vecMaxs);
 	hEntity.__KeyValueFromVector("mins", vecMins);
 	hEntity.__KeyValueFromInt("solid", 2);
+
 	if (sFunction) hEntity.__KeyValueFromString(sOutput, format("!caller,RunScriptCode,%s()", sFunction));
 	if (iType & TR_OFF) AcceptEntityInput(hEntity, "Disable");
+
 	return hEntity;
 }
 
@@ -641,7 +680,7 @@ function RemoveItemWithin(vecPos, flRadius)
 
 function TakeItem(hPlayer, hItem, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false)
 {
-	local sClass = hItem.GetClassname();
+    local sClass = hItem.GetClassname();
 	if ((sClass.find("weapon_") != null && sClass.find("_weapon_") == null) || sClass == "prop_physics")
 	{
 		if (sClass == "prop_physics")
@@ -650,11 +689,14 @@ function TakeItem(hPlayer, hItem, bSetPreviousAngles = true, bSetVelocityDirecti
 			else if (hPlayer.GetActiveWeapon() == hItem) return;
 		}
 		else if (NetProps.GetPropEntity(hItem, "m_hOwnerEntity") != null || NetProps.GetPropInt(hItem, "m_itemCount") == 0) return;
+
 		if ((hItem.GetOrigin() - hPlayer.EyePosition()).LengthSqr() <= 10712.897477)
 		{
 			local eAngles = hPlayer.EyeAngles();
+
 			TP(hPlayer, null, hItem.GetOrigin() - hPlayer.EyePosition(), null, true);
-			hPlayer.PressButton(IN_USE);
+			hPlayer.SendInput(IN_USE);
+
 			if (bSetPreviousAngles)
 			{
 				RunNextTickFunction(TP, hPlayer, null, eAngles, null);
@@ -670,9 +712,9 @@ function TakeItem(hPlayer, hItem, bSetPreviousAngles = true, bSetVelocityDirecti
 
 function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false, bFindNearestItem = true, sClassname = null)
 {
-	local hEntity, lastEnt;
-	while (hEntity = Entities.Next(hEntity))
-	{
+    local hEntity, lastEnt;
+    while (hEntity = Entities.Next(hEntity))
+    {
 		local sClass = hEntity.GetClassname();
 		if ((sClass.find("weapon_") != null && sClass.find("_weapon_") == null) || sClass == "prop_physics")
 		{
@@ -684,6 +726,7 @@ function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirecti
 					else if (hPlayer.GetActiveWeapon() == hEntity) continue;
 				}
 				else if (NetProps.GetPropEntity(hEntity, "m_hOwnerEntity") || NetProps.GetPropInt(hEntity, "m_itemCount") == 0) continue;
+
 				local flDistanceSqr = (hEntity.GetOrigin() - hPlayer.EyePosition()).LengthSqr();
 				if (flDistanceSqr <= 10712.897477)
 				{
@@ -699,12 +742,14 @@ function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirecti
 				}
 			}
 		}
-	}
-	if (lastEnt)
-	{
+    }
+    if (lastEnt)
+    {
 		local eAngles = hPlayer.EyeAngles();
+
 		TP(hPlayer, null, lastEnt.GetOrigin() - hPlayer.EyePosition(), null, true);
-		hPlayer.PressButton(IN_USE);
+		hPlayer.SendInput(IN_USE);
+
 		if (bSetPreviousAngles)
 		{
 			RunNextTickFunction(TP, hPlayer, null, eAngles, null);
@@ -714,7 +759,7 @@ function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirecti
 			local vecVel = hPlayer.GetVelocity();
 			if (vecVel.x != 0 || vecVel.y != 0) RunNextTickFunction(TP, hPlayer, null, QAngle(eAngles.x, atan2(vecVel.y, vecVel.x) * Math.Rad2Deg), null);
 		}
-	}
+    }
 }
 
 function TakeNearestItemByClassname(hPlayer, sClassname, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false)
@@ -724,27 +769,33 @@ function TakeNearestItemByClassname(hPlayer, sClassname, bSetPreviousAngles = tr
 
 function UseEntity(hPlayer, hEntity, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false)
 {
-	local sClass = hEntity.GetClassname();
+    local sClass = hEntity.GetClassname();
 	if (g_aUseEntitiesList.find(sClass) != null)
 	{
 		if (sClass == "func_button" || sClass == "prop_door_rotating") if (NetProps.GetPropInt(hEntity, "m_bLocked")) return;
+
 		if (sClass == "upgrade_ammo_explosive" || sClass == "upgrade_ammo_incendiary") if (NetProps.GetPropInt(hEntity, "m_iUsedBySurvivorsMask") & (1 << hPlayer.GetEntityIndex() - 1)) return;
+
 		if (sClass == "upgrade_laser_sight")
 		{
 			if (hPlayer.GetActiveWeapon()) return;
 			if (g_aPrimaryWeaponList.find(hPlayer.GetActiveWeapon().GetClassname()) == null) return;
 			else if (NetProps.GetPropInt(hPlayer.GetActiveWeapon(), "m_upgradeBitVec") & eUpgrade.Laser) return;
 		}
+
 		if ((hEntity.GetOrigin() - hPlayer.EyePosition()).LengthSqr() <= 9539.79442)
 		{
 			local eAngles = hPlayer.EyeAngles();
+
 			TP(hPlayer, null, hEntity.GetOrigin() - hPlayer.EyePosition(), null, true);
+
 			if (sClass == "prop_door_rotating_checkpoint" || sClass == "prop_door_rotating")
 			{
 				if (NetProps.GetPropInt(hEntity, "m_eDoorState") == 0) AcceptEntityInput(hEntity, "PlayerOpen", "", 0.0, hPlayer);
 				else AcceptEntityInput(hEntity, "PlayerClose", "", 0.0, hPlayer);
 			}
-			else hPlayer.PressButton(IN_USE);
+			else hPlayer.SendInput(IN_USE);
+
 			if (bSetPreviousAngles)
 			{
 				RunNextTickFunction(TP, hPlayer, null, eAngles, null);
@@ -760,22 +811,25 @@ function UseEntity(hPlayer, hEntity, bSetPreviousAngles = true, bSetVelocityDire
 
 function UseNearestEntity(hPlayer, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false, bFindNearestEntity = true, sClassname = null)
 {
-	local hEntity, lastEnt;
-	while (hEntity = Entities.Next(hEntity))
-	{
+    local hEntity, lastEnt;
+    while (hEntity = Entities.Next(hEntity))
+    {
 		local sClass = hEntity.GetClassname();
 		if (g_aUseEntitiesList.find(sClass) != null)
 		{
 			if (bFindNearestEntity || sClass == sClassname)
 			{
 				if (sClass == "func_button" || sClass == "prop_door_rotating") if (NetProps.GetPropInt(hEntity, "m_bLocked")) continue;
+
 				if (sClass == "upgrade_ammo_explosive" || sClass == "upgrade_ammo_incendiary") if (NetProps.GetPropInt(hEntity, "m_iUsedBySurvivorsMask") & (1 << hPlayer.GetEntityIndex() - 1)) continue;
+
 				if (sClass == "upgrade_laser_sight")
 				{
 					if (!hPlayer.GetActiveWeapon()) continue;
 					if (g_aPrimaryWeaponList.find(hPlayer.GetActiveWeapon().GetClassname()) == null) continue;
 					else if (NetProps.GetPropInt(hPlayer.GetActiveWeapon(), "m_upgradeBitVec") & eUpgrade.Laser) continue;
 				}
+
 				local flDistanceSqr = (hEntity.GetOrigin() - hPlayer.EyePosition()).LengthSqr();
 				if (flDistanceSqr <= 9539.79442)
 				{
@@ -791,18 +845,21 @@ function UseNearestEntity(hPlayer, bSetPreviousAngles = true, bSetVelocityDirect
 				}
 			}
 		}
-	}
-	if (lastEnt)
-	{
+    }
+    if (lastEnt)
+    {
 		local eAngles = hPlayer.EyeAngles();
 		local sClass = lastEnt.GetClassname();
+
 		TP(hPlayer, null, lastEnt.GetOrigin() - hPlayer.EyePosition(), null, true);
+
 		if (sClass == "prop_door_rotating_checkpoint" || sClass == "prop_door_rotating")
 		{
 			if (NetProps.GetPropInt(lastEnt, "m_eDoorState") == 0) AcceptEntityInput(lastEnt, "PlayerOpen", "", 0.0, hPlayer);
 			else AcceptEntityInput(lastEnt, "PlayerClose", "", 0.0, hPlayer);
 		}
-		else hPlayer.PressButton(IN_USE);
+		else hPlayer.SendInput(IN_USE);
+
 		if (bSetPreviousAngles)
 		{
 			RunNextTickFunction(TP, hPlayer, null, eAngles, null);
@@ -812,7 +869,7 @@ function UseNearestEntity(hPlayer, bSetPreviousAngles = true, bSetVelocityDirect
 			local vecVel = hPlayer.GetVelocity();
 			if (vecVel.x != 0 || vecVel.y != 0) RunNextTickFunction(TP, hPlayer, null, QAngle(eAngles.x, atan2(vecVel.y, vecVel.x) * Math.Rad2Deg), null);
 		}
-	}
+    }
 }
 
 function UseNearestEntityByClassname(hPlayer, sClassname, bSetPreviousAngles = true, bSetVelocityDirectionAngles = false)
@@ -827,13 +884,10 @@ function ScriptedTP(hPlayerFrom, hPlayerTo, flTime = 6.1, bStuckTeleport = false
 		SayMsg("[ScriptedTP] Invalid player");
 		return;
 	}
-	if (!bStuckTeleport)
+	if (!bStuckTeleport && !hPlayerTo.IsAlive())
 	{
-		if (!hPlayerTo.IsAlive())
-		{
-			SayMsg("[ScriptedTP] Invalid leader");
-			return;
-		}
+		SayMsg("[ScriptedTP] Invalid leader");
+		return;
 	}
 	if (flTime > 0)
 	{
@@ -846,6 +900,7 @@ function ScriptedTP(hPlayerFrom, hPlayerTo, flTime = 6.1, bStuckTeleport = false
 				if (hBot && IsPlayerABot(hBot))
 					SendCommandToBot(BOT_CMD_RESET, hBot);
 			}
+
 			RegisterOnTickFunction(sFunction, (sCharName = GetCharacterDisplayName(hPlayerFrom)));
 			CreateTimer(nMode < 2 ? 0.2 : 4.0, function(sFunction, sCharName){
 				if (IsOnTickFunctionRegistered(sFunction, sCharName))
@@ -855,6 +910,7 @@ function ScriptedTP(hPlayerFrom, hPlayerTo, flTime = 6.1, bStuckTeleport = false
 				}
 			}, sFunction, sCharName);
 		}
+
 		CreateTimer(flTime, function(sCharName, sLeaderCharName, bStuckTeleport){
 			ScriptedTP(Ent("!" + sCharName), Ent("!" + sLeaderCharName), 0.0, bStuckTeleport);
 		}, GetCharacterDisplayName(hPlayerFrom), GetCharacterDisplayName(hPlayerTo), bStuckTeleport);
@@ -863,27 +919,32 @@ function ScriptedTP(hPlayerFrom, hPlayerTo, flTime = 6.1, bStuckTeleport = false
 	if (bStuckTeleport)
 	{
 		hPlayerTo = null;
+
 		local hEntity, flDistanceSqrTemp;
 		local flDistanceSqr = eTrace.Distance;
 		while (hEntity = Entities.FindByClassname(hEntity, "player"))
 		{
-			if (hEntity.IsSurvivor() && hEntity.IsAlive() && hEntity != hPlayerFrom && (flDistanceSqrTemp = CEntity(hPlayerFrom).GetDistance(hEntity, true)) < flDistanceSqr)
+			if (hEntity.IsSurvivor() && hEntity.IsAlive() && hEntity != hPlayerFrom && (flDistanceSqrTemp = GetDistanceToEntity(hPlayerFrom, hEntity, true)) < flDistanceSqr)
 			{
 				flDistanceSqr = flDistanceSqrTemp;
 				hPlayerTo = hEntity;
 			}
 		}
+
 		if (!hPlayerTo) return SayMsg("[ScriptedTP] No player to teleport");
 		if (IsPlayerABot(hPlayerFrom)) SayMsg("[ScriptedTP] Done, but player a bot");
+
 		hPlayerFrom.__KeyValueFromVector("origin", hPlayerTo.GetOrigin());
 		SendToConsole(format("echo %.03f >> [ScriptedTP] Completed scripted stuck warp", GetCurrentTime()));
 		return;
 	}
 	if (IsPlayerABot(hPlayerTo)) SayMsg("[ScriptedTP] Done, but leader a bot");
 	if (!IsPlayerABot(hPlayerFrom)) SayMsg("[ScriptedTP] Done, but player isn't idle");
-	if (CEntity(hPlayerTo).GetDistance(hPlayerFrom, true) < 225e4) sayf("[ScriptedTP] Done, but distance (%.01f) between players is too close", CEntity(hPlayerTo).GetDistance(hPlayerFrom));
+	if (GetDistanceToEntity(hPlayerTo, hPlayerFrom, true) < 225e4) sayf("[ScriptedTP] Done, but distance (%.01f) between players is too close", GetDistanceToEntity(hPlayerTo, hPlayerFrom));
+
 	local vecForward = hPlayerTo.EyeAngles().Forward(); vecForward.z = 0.0;
 	hPlayerFrom.SetOrigin(hPlayerTo.GetOrigin() + vecForward * -10);
+
 	SendToConsole(format("echo %.03f >> [ScriptedTP] Completed scripted warp", GetCurrentTime()));
 }
 
@@ -976,6 +1037,7 @@ function DumpInfected()
 	local sData = "";
 	local hEntity, vecPos;
 	local aType = ["smoker", "boomer", "hunter", "spitter", "jockey", "charger", "witch", "tank"];
+
 	while (hEntity = Entities.FindByClassname(hEntity, "player"))
 	{
 		if (!hEntity.IsSurvivor() && !hEntity.IsIncapacitated() && NetProps.GetPropInt(hEntity, "m_iObserverMode") == 0 && !NetProps.GetPropInt(hEntity, "m_isGhost"))
@@ -985,6 +1047,7 @@ function DumpInfected()
 			iCount++;
 		}
 	}
+
 	while (hEntity = Entities.FindByClassname(hEntity, "infected"))
 	{
 		if (hEntity.GetHealth() > 0 && NetProps.GetPropInt(hEntity, "movetype") != MOVETYPE_NONE)
@@ -995,6 +1058,7 @@ function DumpInfected()
 			iCount++;
 		}
 	}
+
 	while (hEntity = Entities.FindByClassname(hEntity, "witch"))
 	{
 		if (hEntity.GetHealth() > 0)
@@ -1004,6 +1068,7 @@ function DumpInfected()
 			iCount++;
 		}
 	}
+
 	if (iCount > 0)
 	{
 		StringToFile(__MAIN_PATH__ + "zdump.nut", sData);
@@ -1017,6 +1082,7 @@ function DebugItems(sItemName = null)
 {
 	local iCount = 0;
 	local hEntity, sModel;
+
 	if (sItemName)
 	{
 		if (sItemName == "gascan") sModel = "models/props_junk/gascan001a.mdl";
@@ -1025,6 +1091,7 @@ function DebugItems(sItemName = null)
 		else if (sItemName == "fireworkcrate") sModel = "models/props_junk/explosive_box001.mdl";
 		else if (sItemName == "cola_bottles") sModel = "models/w_models/weapons/w_cola.mdl";
 	}
+
 	while (hEntity = Entities.Next(hEntity))
 	{
 		local sClass = hEntity.GetClassname();
@@ -1036,6 +1103,7 @@ function DebugItems(sItemName = null)
 				if (NetProps.GetPropString(hEntity, "m_ModelName") != sModel)
 					continue;
 			}
+
 			if (!NetProps.GetPropEntity(hEntity, "m_hOwner"))
 			{
 				if (sItemName)
@@ -1051,6 +1119,7 @@ function DebugItems(sItemName = null)
 					}
 					printf("[Debug Items] Specific item (idx %d) found: %s", hEntity.GetEntityIndex(), ("setpos_exact " + kvstr(hEntity.GetOrigin())));
 				}
+
 				SpawnEntityFromTable("prop_dynamic", {
 					targetname = "task_debug_" + sClass
 					model = "models/extras/info_speech.mdl"
@@ -1109,7 +1178,7 @@ function DisableAutoClimb()
 	if (IsOnTickFunctionRegistered("AutoClimb_Think"))
 	{
 		RemoveOnTickFunction("AutoClimb_Think");
-		foreach (player in CollectPlayers()) CEntity(player).RemoveScriptScopeKey("auto_climb");
+		foreach (player in CollectPlayers()) RemoveScriptScopeKey(player, "auto_climb");
 	}
 }
 
@@ -1127,7 +1196,7 @@ function DisableAutoBileBreaker()
 
 function AutoBoost_IsValid(hPlayer)
 {
-	if (!(CEntity(hPlayer).KeyInScriptScope("rocketjump")) && !(CEntity(hPlayer).KeyInScriptScope("bileboost")) && !(CEntity(hPlayer).KeyInScriptScope("grenadeboost")))
+	if (!KeyInScriptScope(hPlayer, "rocketjump") && !KeyInScriptScope(hPlayer, "bileboost") && !KeyInScriptScope(hPlayer, "grenadeboost"))
 	{
 		if (hPlayer.IsSurvivor() && hPlayer.IsAlive() && !hPlayer.IsIncapacitated())
 		{
@@ -1146,7 +1215,7 @@ function AutoBoost_IsCanShoot(hPlayer, aPlayers, hTarget, flRadius, bMethod2D, b
 			if (NetProps.GetPropEntity(hTarget, "m_hGroundEntity"))
 				return false;
 		}
-		return CEntity(hPlayer).GetDistance(hTarget, true, bMethod2D) < flRadius;
+		return GetDistanceToEntity(hPlayer, hTarget, true, bMethod2D) < flRadius;
 	}
 	else
 	{
@@ -1161,7 +1230,7 @@ function AutoBoost_IsCanShoot(hPlayer, aPlayers, hTarget, flRadius, bMethod2D, b
 					if (NetProps.GetPropEntity(hPlayerTemp, "m_hGroundEntity"))
 						continue;
 				}
-				if (CEntity(hPlayer).GetDistance(hPlayerTemp, true, bMethod2D) < flRadius)
+				if (GetDistanceToEntity(hPlayer, hPlayerTemp, true, bMethod2D) < flRadius)
 					return true;
 			}
 		}
@@ -1173,7 +1242,7 @@ function AutoRocketJump(hPlayer, eAngles, flRadius = 61.0, bMethod2D = false, bD
 {
 	if (AutoBoost_IsValid(hPlayer))
 	{
-		CEntity(hPlayer).SetScriptScopeVar("rocketjump", {
+		SetScriptScopeVar(hPlayer, "rocketjump", {
 			angles = eAngles.Forward()
 			method = bMethod2D
 			radius = (flRadius == null) ? (bMethod2D ? 625.0 : 3721.0) : flRadius * flRadius
@@ -1192,7 +1261,7 @@ function AutoBileBoost(hPlayer, eAngles, flRadius = 80.0, bMethod2D = false, bDu
 {
 	if (AutoBoost_IsValid(hPlayer))
 	{
-		CEntity(hPlayer).SetScriptScopeVar("bileboost", {
+		SetScriptScopeVar(hPlayer, "bileboost", {
 			angles = eAngles.Forward()
 			method = bMethod2D
 			radius = (flRadius == null) ? (bMethod2D ? 3600.0 : 6400.0) : flRadius * flRadius
@@ -1214,18 +1283,22 @@ function AutoGrenadeBoost(hPlayer, flPitch, aTargets = [], bDuck = true, bJump =
 	{
 		if (typeof aTargets == "instance") aTargets = [aTargets];
 		else if (typeof aTargets != "array") return;
+
 		local tInv = {};
 		GetInvTable(hPlayer, tInv);
-		CEntity(hPlayer).SetScriptScopeVar("grenadeboost", {
+
+		SetScriptScopeVar(hPlayer, "grenadeboost", {
 			angle = flPitch
 			jump = bJump ? IN_JUMP : 0
 			target = aTargets
 		});
+
 		if ("slot2" in tInv)
 		{
 			if (tInv["slot2"].GetClassname() == "weapon_molotov") ClientCommand(hPlayer, "use weapon_molotov");
 			else ClientCommand(hPlayer, "use weapon_pipe_bomb");
 		}
+
 		NetProps.SetPropInt(hPlayer, "m_afButtonForced", bDuck ? IN_DUCK : 0);
 		g_aAutoGrenadeBoostUsers.push(hPlayer);
 	}
@@ -1235,9 +1308,10 @@ function RemoveAutoBoost(hPlayer = null)
 {
 	if (hPlayer)
 	{
-		CEntity(hPlayer).RemoveScriptScopeKey("rocketjump");
-		CEntity(hPlayer).RemoveScriptScopeKey("bileboost");
-		CEntity(hPlayer).RemoveScriptScopeKey("grenadeboost");
+		RemoveScriptScopeKey(hPlayer, "rocketjump");
+		RemoveScriptScopeKey(hPlayer, "bileboost");
+		RemoveScriptScopeKey(hPlayer, "grenadeboost");
+
 		foreach (idx, player in g_aAutoRocketJumpUsers)
 		{
 			if (hPlayer == player)
@@ -1246,6 +1320,7 @@ function RemoveAutoBoost(hPlayer = null)
 				break;
 			}
 		}
+
 		foreach (idx, player in g_aAutoBileBoostUsers)
 		{
 			if (hPlayer == player)
@@ -1254,6 +1329,7 @@ function RemoveAutoBoost(hPlayer = null)
 				break;
 			}
 		}
+
 		foreach (idx, player in g_aAutoGrenadeBoostUsers)
 		{
 			if (hPlayer == player)
@@ -1262,17 +1338,19 @@ function RemoveAutoBoost(hPlayer = null)
 				break;
 			}
 		}
+
 		return;
 	}
-	local hPlayerTemp;
+	
 	g_aAutoRocketJumpUsers.clear();
 	g_aAutoBileBoostUsers.clear();
 	g_aAutoGrenadeBoostUsers.clear();
+
 	foreach (player in CollectPlayers())
 	{
-		CEntity(player).RemoveScriptScopeKey("rocketjump");
-		CEntity(player).RemoveScriptScopeKey("bileboost");
-		CEntity(player).RemoveScriptScopeKey("grenadeboost");
+		RemoveScriptScopeKey(player, "rocketjump");
+		RemoveScriptScopeKey(player, "bileboost");
+		RemoveScriptScopeKey(player, "grenadeboost");
 	}
 }
 
@@ -1283,15 +1361,15 @@ function AutoClimb_Think()
 	{
 		if (hPlayer.IsSurvivor())
 		{
-			if (!CEntity(hPlayer).KeyInScriptScope("auto_climb"))
+			if (!KeyInScriptScope(hPlayer, "auto_climb"))
 			{
-				CEntity(hPlayer).SetScriptScopeVar("auto_climb", {
+				SetScriptScopeVar(hPlayer, "auto_climb", {
 					on_ladder = false
 					direction = null
 				});
 			}
 			local idx = hPlayer.GetEntityIndex();
-			local tParams = CEntity(hPlayer).GetScriptScopeVar("auto_climb");
+			local tParams = GetScriptScopeVar(hPlayer, "auto_climb");
 			if (NetProps.GetPropInt(hPlayer, "m_MoveType") == MOVETYPE_LADDER)
 			{
 				if (!tParams["on_ladder"])
@@ -1340,9 +1418,9 @@ function AutoBileBreaker_Think()
 	local hEntity;
 	while (hEntity = Entities.FindByClassname(hEntity, "vomitjar_projectile"))
 	{
-		if (!CEntity(hEntity).KeyInScriptScope("auto_bile_breaker"))
+		if (!KeyInScriptScope(hEntity, "auto_bile_breaker"))
 		{
-			CEntity(hEntity).SetScriptScopeVar("auto_bile_breaker", {
+			SetScriptScopeVar(hEntity, "auto_bile_breaker", {
 				distance = (1 << 30)
 			});
 			g_aBilesToProcess.push(hEntity);
@@ -1355,7 +1433,7 @@ function AutoBileBreaker_Think()
 			local hPlayer;
 			local bThrowerOnly = true;
 			local bAtleastOnceProcessed = false;
-			local tScope = CEntity(hEntity).GetScriptScopeVar("auto_bile_breaker");
+			local tScope = GetScriptScopeVar(hEntity, "auto_bile_breaker");
 			while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 			{
 				if (NetProps.GetPropEntity(hEntity, "m_hThrower") != hPlayer)
@@ -1395,6 +1473,7 @@ function AutoBoost_Think()
 	{
 		local hPlayer;
 		local aPlayers = [];
+
 		while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 		{
 			if (hPlayer.IsSurvivor() && hPlayer.IsAlive())
@@ -1402,25 +1481,29 @@ function AutoBoost_Think()
 				aPlayers.push(hPlayer);
 			}
 		}
+
 		for (local i = 0; i < g_aAutoRocketJumpUsers.len(); i++)
 		{
 			if ((hPlayer = g_aAutoRocketJumpUsers[i]).IsValid())
 			{
-				local tParams = CEntity(hPlayer).GetScriptScopeVar("rocketjump");
+				local tParams = GetScriptScopeVar(hPlayer, "rocketjump");
 				if (!tParams["release"])
 				{
 					TP(hPlayer, null, tParams["angles"], null, true);
+
 					if (AutoBoost_IsCanShoot(hPlayer, aPlayers, tParams["target"], tParams["radius"], tParams["method"], tParams["ignore"]))
 					{
 						NetProps.SetPropInt(hPlayer, "m_afButtonForced", IN_ATTACK | tParams["duck"]);
+
 						CreateTimer(0.01, function(hPlayer){
-							if (hPlayer.IsValid())
-								NetProps.SetPropInt(hPlayer, "m_afButtonForced", 0);
+							if (hPlayer.IsValid()) NetProps.SetPropInt(hPlayer, "m_afButtonForced", 0);
 						}, hPlayer);
+
 						tParams["debug_time"] = Time() + 0.5;
 						tParams["release"] = true;
 						continue;
 					}
+
 					NetProps.SetPropInt(hPlayer, "m_afButtonForced", tParams["duck"]);
 					continue;
 				}
@@ -1437,6 +1520,7 @@ function AutoBoost_Think()
 								{
 									local flGainedSpeed = NetProps.GetPropVector(aPlayers[l], "m_vecBaseVelocity").Length();
 									local flGainedSpeed2D = NetProps.GetPropVector(aPlayers[l], "m_vecBaseVelocity").Length2D();
+
 									printl("----------- Auto Rocketjump -----------");
 									printf("Player (idx): %d\nBooster (idx): %d\nAngles: %s\nGained speed: %.03f\nGained speed 2D: %.03f",
 										aPlayers[l].GetEntityIndex(),
@@ -1445,9 +1529,12 @@ function AutoBoost_Think()
 										flGainedSpeed,
 										flGainedSpeed2D);
 									printl("--------------------------------------");
+
 									if ("OnRocketJumpCompleted" in getroottable())
 										::OnRocketJumpCompleted(aPlayers[l], hPlayer, flGainedSpeed, flGainedSpeed2D);
-									CEntity(hPlayer).RemoveScriptScopeKey("rocketjump");
+
+									RemoveScriptScopeKey(hPlayer, "rocketjump");
+
 									g_aAutoRocketJumpUsers.remove(i);
 									i--;
 									continue;
@@ -1457,30 +1544,34 @@ function AutoBoost_Think()
 					}
 					continue;
 				}
-				CEntity(hPlayer).RemoveScriptScopeKey("rocketjump");
+				RemoveScriptScopeKey(hPlayer, "rocketjump");
 			}
 			g_aAutoRocketJumpUsers.remove(i);
 			i--;
 		}
+
 		for (local j = 0; j < g_aAutoBileBoostUsers.len(); j++)
 		{
 			if ((hPlayer = g_aAutoBileBoostUsers[j]).IsValid())
 			{
-				local tParams = CEntity(hPlayer).GetScriptScopeVar("bileboost");
+				local tParams = GetScriptScopeVar(hPlayer, "bileboost");
 				if (!tParams["release"])
 				{
 					TP(hPlayer, null, tParams["angles"], null, true);
+
 					if (AutoBoost_IsCanShoot(hPlayer, aPlayers, tParams["target"], tParams["radius"], tParams["method"], tParams["ignore"]))
 					{
 						NetProps.SetPropInt(hPlayer, "m_afButtonForced", tParams["jump"] | tParams["duck"]);
+
 						CreateTimer(0.25, function(hPlayer){
-							if (hPlayer.IsValid())
-								NetProps.SetPropInt(hPlayer, "m_afButtonForced", 0);
+							if (hPlayer.IsValid()) NetProps.SetPropInt(hPlayer, "m_afButtonForced", 0);
 						}, hPlayer);
+
 						tParams["debug_time"] = Time() + 0.5;
 						tParams["release"] = true;
 						continue;
 					}
+
 					NetProps.SetPropInt(hPlayer, "m_afButtonForced", IN_ATTACK | tParams["duck"]);
 					continue;
 				}
@@ -1497,6 +1588,7 @@ function AutoBoost_Think()
 								{
 									local flGainedSpeed = NetProps.GetPropVector(aPlayers[l], "m_vecBaseVelocity").Length();
 									local flGainedSpeed2D = NetProps.GetPropVector(aPlayers[l], "m_vecBaseVelocity").Length2D();
+
 									printl("----------- Auto Bileboost -----------");
 									printf("Player (idx): %d\nBooster (idx): %d\nAngles: %s\nGained speed: %.03f\nGained speed 2D: %.03f",
 										aPlayers[l].GetEntityIndex(),
@@ -1505,9 +1597,12 @@ function AutoBoost_Think()
 										flGainedSpeed,
 										flGainedSpeed2D);
 									printl("--------------------------------------");
+
 									if ("OnBileBoostCompleted" in getroottable())
 										::OnBileBoostCompleted(aPlayers[l], hPlayer, flGainedSpeed, flGainedSpeed2D);
-									CEntity(hPlayer).RemoveScriptScopeKey("bileboost");
+
+									RemoveScriptScopeKey(hPlayer, "bileboost");
+
 									g_aAutoBileBoostUsers.remove(j);
 									j--;
 									continue;
@@ -1517,7 +1612,7 @@ function AutoBoost_Think()
 					}
 					continue;
 				}
-				CEntity(hPlayer).RemoveScriptScopeKey("bileboost");
+				RemoveScriptScopeKey(hPlayer, "bileboost");
 			}
 			g_aAutoBileBoostUsers.remove(j);
 			j--;
@@ -1525,17 +1620,16 @@ function AutoBoost_Think()
 	}
 }
 
-function Bosses_Watchdog()
+function TimescaleListener()
 {
-	if ("ProhibitBosses" in g_ModeScript.LocalScript.DirectorOptions && g_ModeScript.LocalScript.DirectorOptions.ProhibitBosses && Entities.FindByName(null, "task_zombie_boss"))
-	{
-		SayMsg("[Warning] Bosses are prohibited to spawn now!");
-	}
+	local t = 10 * (1.0 / cvar("host_timescale", null, false));
+	if (t != cvar("sv_player_stuck_tolerance", null, false))
+		cvar("sv_player_stuck_tolerance", t);
 }
 
 RegisterOnTickFunction("AutoClimb_Think");
 RegisterOnTickFunction("AutoBoost_Think");
-RegisterLoopFunction("Bosses_Watchdog", 5.0);
+RegisterOnTickFunction("TimescaleListener");
 
 HookEvent("weapon_fire", __tGameEventsListener.OnWeaponFire, __tGameEventsListener);
 HookEvent("tank_spawn", __tGameEventsListener.OnTankSpawn, __tGameEventsListener);
