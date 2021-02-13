@@ -29,13 +29,13 @@ tAutoSB <-
 						local flJumpTime = 0.333374 + (flDistance / 900) - (0.63333 * g_flFactor[hPlayer.GetEntityIndex()]);
 						if (flJumpTime >= 0)
 						{
-							CEntity(hSpitter).SetScriptScopeVar("__autosb_params__", {
+							SetScriptScopeVar(hSpitter, "__autosb_params__", {
 								target = hPlayer
 								spitter = hSpitter.GetEntityIndex()
 								distance = flDistance
 								jumptime = flJumpTime
 								timer = CreateTimer(flJumpTime, function(hPlayer){
-									if (hPlayer.IsValid()) hPlayer.PressButton(IN_JUMP);
+									if (hPlayer.IsValid()) hPlayer.SendInput(IN_JUMP);
 								}, hPlayer)
 							});
 						}
@@ -83,22 +83,22 @@ function AutoSB_Think()
 			if (IsPlayerABot(hOwner))
 			{
 				local tParams;
-				if (!CEntity(hEntity).KeyInScriptScope("spawned"))
+				if (!KeyInScriptScope(hEntity, "spawned"))
 				{
-					if (CEntity(hOwner).KeyInScriptScope("__autosb_params__"))
+					if (KeyInScriptScope(hOwner, "__autosb_params__"))
 					{
 						local flDifference = Time() - tAutoSB["flAbilityActivationTime"][hOwner.GetEntityIndex()] - 0.333374;
-						tParams = CEntity(hOwner).GetScriptScopeVar("__autosb_params__");
+						tParams = GetScriptScopeVar(hOwner, "__autosb_params__");
 						tParams["jumptime"] += flDifference;
 						tParams["timer"].m_flCallTime += flDifference;
-						CEntity(hEntity).SetScriptScopeVar("__autosb_params__", tParams);
-						CEntity(hOwner).RemoveScriptScopeKey("__autosb_params__")
+						SetScriptScopeVar(hEntity, "__autosb_params__", tParams);
+						RemoveScriptScopeKey(hOwner, "__autosb_params__")
 					}
-					CEntity(hEntity).SetScriptScopeVar("spawned", true);
+					SetScriptScopeVar(hEntity, "spawned", true);
 				}
-				if (CEntity(hEntity).KeyInScriptScope("__autosb_params__"))
+				if (KeyInScriptScope(hEntity, "__autosb_params__"))
 				{
-					tParams = CEntity(hEntity).GetScriptScopeVar("__autosb_params__");
+					tParams = GetScriptScopeVar(hEntity, "__autosb_params__");
 					if (tParams["target"].IsValid())
 					{
 						if (NetProps.GetPropEntity(tParams["target"], "m_hGroundEntity") == hEntity)
@@ -118,11 +118,11 @@ function AutoSB_Think()
 								printl("-----------------------------------");
 								if ("OnSpitterBoostCompleted" in getroottable())
 									::OnSpitterBoostCompleted(tParams["target"], PlayerInstanceFromIndex(tParams["spitter"]), flGainedSpeed, flGainedSpeed2D);
-								CEntity(hEntity).RemoveScriptScopeKey("__autosb_params__");
+								RemoveScriptScopeKey(hEntity, "__autosb_params__");
 							}
 						}
 					}
-					else CEntity(hEntity).RemoveScriptScopeKey("__autosb_params__");
+					else RemoveScriptScopeKey(hEntity, "__autosb_params__");
 				}
 			}
 		}
@@ -138,7 +138,7 @@ function SwitchAutoSB_Cmd(hPlayer)
 
 function ChangeFactor_Cmd(hPlayer, sValue)
 {
-	if (sValue != CC_EMPTY_ARGUMENT)
+	if (sValue != CMD_EMPTY_ARGUMENT)
 	{
 		sValue = split(sValue, " ")[0];
 		try {sValue = sValue.tofloat()}
