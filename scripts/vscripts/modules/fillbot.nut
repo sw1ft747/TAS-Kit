@@ -25,7 +25,7 @@ function FillBot_Think(hPlayer)
 				}
 			}
 		}
-		else if (!CEntity(hPlayer).GetScriptScopeVar("is_pouring"))
+		else if (!GetScriptScopeVar(hPlayer, "is_pouring"))
 		{
 			local hEntity;
 			if (hEntity = Entities.FindByClassnameNearest("point_prop_use_target", hPlayer.EyePosition(), 65))
@@ -93,13 +93,13 @@ function OnGasCanPourBlocked(tParams)
 function StartPouring(hPlayer)
 {
 	NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") | IN_ATTACK);
-	CEntity(hPlayer).SetScriptScopeVar("is_pouring", true);
+	SetScriptScopeVar(hPlayer, "is_pouring", true);
 }
 
 function StopPouring(hPlayer)
 {
 	NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") & ~IN_ATTACK);
-	CEntity(hPlayer).SetScriptScopeVar("is_pouring", false);
+	SetScriptScopeVar(hPlayer, "is_pouring", false);
 }
 
 function IsPropUseTargetUsed(hEntity)
