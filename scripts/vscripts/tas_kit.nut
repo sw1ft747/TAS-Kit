@@ -2,7 +2,7 @@
 // TAS Kit
 // Powered by AP
 
-const __TAS_KIT_VER__ = "1.0.2"
+const __TAS_KIT_VER__ = "1.0.3"
 const __MAIN_PATH__ = "tas_kit/"
 
 IncludeScript("modules/helper_utils");
@@ -28,6 +28,7 @@ g_flFinaleStartTime <- null;
 g_bSpeedrunStarted <- false;
 
 if (!("g_bRestarting" in this)) g_bRestarting <- false;
+if (!("g_bApplyMapParams" in this)) g_bApplyMapParams <- true;
 
 __tEvents <- {};
 
@@ -46,9 +47,21 @@ function UpdateDataTable(tData)
 	local sData = "{";
 	foreach (key, val in tData)
 	{
-		if (typeof val == "string") sData = format("%s\n\t%s = \"%s\"", sData, key, val);
-		else if (typeof val == "float") sData = format("%s\n\t%s = %f", sData, key, val);
-		else if (typeof val == "integer" || typeof val == "bool") sData = sData + "\n\t" + key + " = " + val;
+		switch (typeof val)
+		{
+		case "string":
+			sData = format("%s\n\t%s = \"%s\"", sData, key, val);
+			break;
+		
+		case "float":
+			sData = format("%s\n\t%s = %f", sData, key, val);
+			break;
+		
+		case "integer":
+		case "bool":
+			sData = sData + "\n\t" + key + " = " + val;
+			break;
+		}
 	}
 	sData = sData + "\n}\n";
 	StringToFile(__MAIN_PATH__ + "data.nut", sData);
@@ -62,13 +75,19 @@ if (!("g_tDataTable" in this))
 		fdmg = true
 		hud = true
 	};
+
 	local tData = FileToString(__MAIN_PATH__ + "data.nut");
+
 	if (tData)
 	{
 		tData = compilestring("return " + tData)();
 		foreach (key, val in g_tDataTable) if (key in tData) g_tDataTable.rawset(key, tData.rawget(key));
 	}
-	else printf("[TAS Kit] The data table was created in the 'left4dead2/ems/%s' folder\n", __MAIN_PATH__);
+	else
+	{
+		printf("[TAS Kit] The data table was created in the 'left4dead2/ems/%s' folder\n", __MAIN_PATH__);
+	}
+
 	UpdateDataTable(g_tDataTable);
 	IncludeScript("modules/template");
 }
@@ -77,6 +96,7 @@ function OnGameplayStart()
 {
 	InitializeHUD();
 	InitializeMapParams();
+
 	if (g_bRestarting)
 	{
 		try {
@@ -104,31 +124,41 @@ function OnGameplayStart()
 						vecPos = null;
 						eAngles = null;
 						aVars = array(8, null);
+
 						if (tbl.rawin("origin") && tbl["origin"])
 						{
 							aVars[0] = tbl["origin"];
 							vecPos = tbl["origin"];
 						}
+
 						if (tbl.rawin("angles") && tbl["angles"])
 						{
 							aVars[1] = tbl["angles"];
 							eAngles = tbl["angles"];
 						}
+
 						if (tbl.rawin("velocity") && tbl["velocity"]) aVars[2] = tbl["velocity"];
+
 						if (tbl.rawin("health") && tbl["health"] != null) aVars[3] = tbl["health"];
+
 						if (tbl.rawin("buffer") && tbl["buffer"] != null) aVars[4] = tbl["buffer"];
+
 						if (tbl.rawin("revives") && tbl["revives"] != null) aVars[5] = tbl["revives"];
+
 						if (tbl.rawin("idle") && tbl["idle"]) bIdle = true;
+
 						if (tbl.rawin("Inventory") && tbl["Inventory"]) {
 							local aWeaponList = [];
 							local aInv = array(7, null);
 							local tInv = tbl["Inventory"];
 							local sActiveWeapon, bDual;
+
 							if (tInv.rawin("active_slot") && !tInv.rawin("slot5") && tInv["active_slot"])
 							{
 								local sSlot = tInv["active_slot"];
 								sActiveWeapon = (sSlot.slice(-1).tointeger() < 2 ? tInv[sSlot]["weapon"] : tInv[sSlot]);
 							}
+
 							if (tInv.rawin("slot0") && tInv["slot0"])
 							{
 								if (tInv["slot0"].rawin("clip")) aInv[2] = tInv["slot0"]["clip"];
@@ -136,11 +166,13 @@ function OnGameplayStart()
 								if (tInv["slot0"].rawin("upgrade_type")) aInv[4] = tInv["slot0"]["upgrade_type"];
 								if (tInv["slot0"].rawin("upgrade_clip")) aInv[5] = tInv["slot0"]["upgrade_clip"];
 							}
+
 							if (tInv.rawin("slot1") && tInv["slot1"])
 							{
 								if (tInv["slot1"].rawin("clip")) aInv[6] = tInv["slot1"]["clip"];
 								bDual = tInv["slot1"].rawin("dual") && tInv["slot1"]["dual"];
 							}
+
 							foreach (slot, val in tInv)
 							{
 								if (val)
@@ -160,6 +192,7 @@ function OnGameplayStart()
 									}
 								}
 							}
+
 							if (sActiveWeapon)
 							{
 								for (local i = 0; i < aWeaponList.len(); i++)
@@ -180,11 +213,14 @@ function OnGameplayStart()
 							{
 								aWeaponList.push(tInv["slot5"]);
 							}
+
 							aInv[0] = aWeaponList;
 							aInv[1] = sActiveWeapon;
 							aVars[6] = aInv;
 						}
+
 						if ("Actions" in tbl && tbl["Actions"]) aVars[7] = tbl["Actions"];
+
 						if (hPlayer = Entities.FindByName(null, "!" + char))
 						{
 							if (vecPos || eAngles)
@@ -197,6 +233,7 @@ function OnGameplayStart()
 								SendToServerConsole("sm_idle " + hPlayer.GetEntityIndex());
 							}
 						}
+
 						g_tSegmentData[char] <- aVars;
 					}
 				}
@@ -220,6 +257,7 @@ function OnGameplayStart()
 			SayMsg("Check the console for more information");
 		}
 	}
+
 	EntFire("info_changelevel", "Disable");
 	printl("[TAS Kit]\nAuthor: Sw1ft\nVersion: " + __TAS_KIT_VER__);
 }
@@ -227,21 +265,29 @@ function OnGameplayStart()
 function IssueSurvivorEquipment(hPlayer, vecPos, eAngles, vecVel, iHealth, flHealthBuffer, iRevivies, aInventory, funcActions)
 {
 	if (vecPos || eAngles || vecVel) TP(hPlayer, vecPos, eAngles, vecVel);
+
 	if (iHealth != null) hPlayer.SetHealth(iHealth);
+
 	if (flHealthBuffer != null) hPlayer.SetHealthBuffer(flHealthBuffer);
+
 	if (iRevivies != null) hPlayer.SetReviveCount(iRevivies);
+
 	if (aInventory) {
 		foreach (weapon in aInventory[0]) // aWeaponList
 			hPlayer.GiveItem(weapon);
+
 		if (aInventory[1]) // sActiveWeapon
 		{
 			if (hPlayer.IsHost()) SendToServerConsole("use weapon_" + aInventory[1]);
 			else SendToServerConsole(format("sm_ccmd %d \"use weapon_%s\"", hPlayer.GetEntityIndex(), aInventory[1]));
 		}
+
 		if (aInventory[4] != null) // iUpgradeType
 			hPlayer.GiveUpgrade(aInventory[4]);
+
 		if (aInventory[2] != null || aInventory[3] != null || aInventory[5] != null) // iPrimaryWeaponClip, iPrimaryWeaponAmmo, iUpgradeClip
 			hPlayer.SetAmmo(eInventoryWeapon.Primary, aInventory[2], aInventory[3], aInventory[5]);
+
 		if (aInventory[6] != null) // iSecondaryWeaponClip
 			hPlayer.SetAmmo(eInventoryWeapon.Secondary, aInventory[6]);
 	}
@@ -296,18 +342,22 @@ function PrintTime()
 	if (g_bSpeedrunStarted)
 	{
 		local flTime;
+
 		if (g_flFinaleStartTime != null)
 		{
 			flTime = Time() - g_flFinaleStartTime;
 			sayf("Finale event time: %.03f %s", flTime, (flTime >= 60 ? ("(" + ToClock(flTime) + ")") : ""));
 		}
+
 		if (g_Timer["previous_segment"] > 0)
 		{
 			flTime = g_Timer["previous_segment"] + g_Timer["time"];
 			sayf("Total time: %.03f %s", flTime, (flTime >= 60 ? ("(" + ToClock(flTime) + ")") : ""));
 		}
+
 		sayf("Segment time: %.03f %s", g_Timer["time"], (g_Timer["time"] >= 60 ? ("(" + ToClock(g_Timer["time"]) + ")") : ""));
 		cvar("host_timescale", 1.0);
+
 		g_bSpeedrunStarted = false;
 		g_bRestarting = true;
 	}
@@ -329,6 +379,9 @@ function InitializeHooks()
 
 function InitializeMapParams()
 {
+	if (!g_bApplyMapParams)
+		return;
+
 	switch (g_sMapName)
 	{
 	case "c1m3_mall":
@@ -436,13 +489,15 @@ function Countdown_Think()
 		if (hPlayer.IsSurvivor())
 		{
 			NetProps.SetPropInt(hPlayer, "m_fFlags", NetProps.GetPropInt(hPlayer, "m_fFlags") | FL_FROZEN);
-			if (g_bBeginMap) continue;
+
+			if (g_bBeginMap)
+				continue;
+
 			local tInv = {};
 			GetInvTable(hPlayer, tInv);
+
 			foreach (key, val in tInv)
-			{
 				val.Kill();
-			}
 		}
 	}
 }
@@ -453,6 +508,7 @@ function Countdown(iValue)
 	{
 		Countdown_Think();
 		RegisterOnTickFunction("Countdown_Think");
+
 		CreateTimer(g_tDataTable["timer"] / 3.0, Countdown, 2);
 		CreateTimer(g_tDataTable["timer"] / 3.0 * 2, Countdown, 1);
 		CreateTimer(g_tDataTable["timer"], Countdown, 0);
@@ -461,23 +517,26 @@ function Countdown(iValue)
 	{
 		RemoveOnTickFunction("Countdown_Think");
 		StartSpeedrun();
+
 		local hPlayer;
 		local bFreezeL4D1Survivors = false;
 		local aL4D1Characters = ["Louis", "Zoey", "Bill", "Francis"];
+
 		if (["c6m1_riverbank", "c6m3_port"].find(g_sMapName) != null)
 		{
 			bFreezeL4D1Survivors = true;
 		}
+
 		while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 		{
 			if (hPlayer.IsSurvivor())
 			{
 				if (bFreezeL4D1Survivors && IsPlayerABot(hPlayer) && aL4D1Characters.find(hPlayer.GetPlayerName()) != null)
-				{
 					continue;
-				}
+
 				NetProps.SetPropInt(hPlayer, "m_fFlags", NetProps.GetPropInt(hPlayer, "m_fFlags") & ~FL_FROZEN);
 				AcceptEntityInput(hPlayer, "DisableLedgeHang");
+
 				local sCharacter = GetCharacterDisplayName(hPlayer).tolower();
 				if (sCharacter in g_tSegmentData)
 				{
@@ -487,9 +546,12 @@ function Countdown(iValue)
 				}
 			}
 		}
+
 		g_tSegmentData.clear();
+
 		if (!CustomSpawn.hTriggerFinale) CustomSpawn.hTriggerFinale = Entities.FindByClassname(null, "trigger_finale");
 		if ("OnSpeedrunStart" in getroottable()) ::OnSpeedrunStart();
+
 		return;
 	}
 	SayMsg(iValue);
