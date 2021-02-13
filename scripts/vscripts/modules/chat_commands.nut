@@ -457,6 +457,8 @@ function SwitchRageBot_Cmd(hPlayer)
 		local idx = hPlayer.GetEntityIndex();
 		if (g_bRagebot[idx])
 		{
+			if (hPlayer.IsHost()) SendToConsole("-attack");
+			else NetProps.SetPropInt(hPlayer, "m_afButtonDisabled", NetProps.GetPropInt(hPlayer, "m_afButtonDisabled") & ~IN_ATTACK);
 			EmitSoundOnClient("Buttons.snd11", hPlayer);
 			g_iAimbotUsers--;
 		}
