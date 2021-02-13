@@ -108,7 +108,7 @@ function PrecacheScriptSounds(hPlayer)
 		}
 		else hPlayer.PrecacheScriptSound(val);
 	}
-	CEntity(hPlayer).SetScriptScopeVar("script_sounds_precached", true);
+	SetScriptScopeVar(hPlayer, "script_sounds_precached", true);
 	printf("[PrecacheScriptSounds] Successfully precached for player %s", hPlayer.GetPlayerName());
 }
 
@@ -153,7 +153,7 @@ function IsPlayerCanSeeEntity(hPlayer, hTarget, vecPos)
 	if (hEntity)
 	{
 		if (hEntity == hTarget || hEntity.GetRootMoveParent() == hTarget) return true;
-		if (hEntity.IsPlayer()) if (hEntity.IsSurvivor()) if (hEntity.IsAttackedBySI()) if (hEntity.GetSIAttacker() == hTarget) return true;
+		if (hEntity.IsPlayer() && hEntity.IsSurvivor() && hEntity.IsAttackedBySI() && hEntity.GetSIAttacker() == hTarget) return true;
 	}
 	return false;
 }
@@ -196,19 +196,33 @@ function GetEntityPosition(hEntity, sClass)
 		if (iType != ZOMBIE_TANK)
 		{
 			local bAimToHead = GetConVarBool(g_ConVar_AimToHead);
-			if (iType == ZOMBIE_SMOKER) vecPos = hEntity.GetBodyPosition(bAimToHead ? 1.15 : 0.95);
-			else if (iType == ZOMBIE_BOOMER) vecPos = hEntity.GetBodyPosition(bAimToHead ? 1.05 : 0.8);
-			else if (iType == ZOMBIE_HUNTER) vecPos = hEntity.GetBodyPosition(bAimToHead ? 0.85 : 0.7);
-			else if (iType == ZOMBIE_SPITTER) vecPos = hEntity.GetBodyPosition(bAimToHead ? 1.15 : 0.9);
-			else if (iType == ZOMBIE_CHARGER)
+			switch (iType)
 			{
+			case ZOMBIE_SMOKER:
+				vecPos = hEntity.GetBodyPosition(bAimToHead ? 1.15 : 0.95);
+				break;
+
+			case ZOMBIE_BOOMER:
+				vecPos = hEntity.GetBodyPosition(bAimToHead ? 1.05 : 0.8);
+				break;
+
+			case ZOMBIE_HUNTER:
+				vecPos = hEntity.GetBodyPosition(bAimToHead ? 0.85 : 0.7);
+				break;
+
+			case ZOMBIE_SPITTER:
+				vecPos = hEntity.GetBodyPosition(bAimToHead ? 1.15 : 0.9);
+				break;
+
+			case ZOMBIE_CHARGER:
 				if (NetProps.GetPropInt(NetProps.GetPropEntity(hEntity, "m_customAbility"), "m_isCharging")) vecPos = hEntity.GetBodyPosition(0.75);
 				else vecPos = bAimToHead ? hEntity.EyePosition() : hEntity.GetBodyPosition(0.85);
-			}
-			else if (iType == ZOMBIE_JOCKEY)
-			{
+				break;
+			
+			case ZOMBIE_JOCKEY:
 				if (NetProps.GetPropEntity(hEntity, "m_jockeyVictim")) vecPos = hEntity.GetBodyPosition(1.3);
 				else vecPos = hEntity.GetBodyPosition(bAimToHead ? 0.55 : 0.5);
+				break;
 			}
 		}
 		else
@@ -218,10 +232,10 @@ function GetEntityPosition(hEntity, sClass)
 	}
 	else if (sClass == "infected" || sClass == "witch")
 	{
-		if (CEntity(hEntity).KeyInScriptScope("trace_hull"))
+		if (KeyInScriptScope(hEntity, "trace_hull"))
 		{
-			if (GetConVarBool(g_ConVar_AimToHead)) vecPos = CEntity(hEntity).GetScriptScopeVar("trace_hull").GetOrigin();
-			else vecPos = hEntity.GetOrigin() + (CEntity(hEntity).GetScriptScopeVar("trace_hull").GetOrigin() - hEntity.GetOrigin()) * 0.8;
+			if (GetConVarBool(g_ConVar_AimToHead)) vecPos = GetScriptScopeVar(hEntity, "trace_hull").GetOrigin();
+			else vecPos = hEntity.GetOrigin() + (GetScriptScopeVar(hEntity, "trace_hull").GetOrigin() - hEntity.GetOrigin()) * 0.8;
 		}
 	}
 	return vecPos;
@@ -333,8 +347,7 @@ function OnAlt1Press(hPlayer)
 				}
 				SendToConsole("+jump");
 				CreateTimer(0.01, function(hPlayer){
-					if (!(hPlayer.GetButtonMask() & IN_ALT1))
-						SendToConsole("-jump");
+					if (!(hPlayer.GetButtonMask() & IN_ALT1)) SendToConsole("-jump");
 				}, hPlayer);
 			}
 		}
@@ -355,16 +368,14 @@ function OnAlt2Press(hPlayer)
 			{
 				SendToConsole("+attack");
 				CreateTimer(0.01, function(hPlayer){
-					if (!(hPlayer.GetButtonMask() & IN_ALT2))
-						SendToConsole("-attack");
+					if (!(hPlayer.GetButtonMask() & IN_ALT2)) SendToConsole("-attack");
 				}, hPlayer);
 			}
 			else
 			{
 				NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") | IN_ATTACK);
 				CreateTimer(0.01, function(hPlayer){
-					if (!(hPlayer.GetButtonMask() & IN_ALT2))
-						NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") & ~IN_ATTACK);
+					if (!(hPlayer.GetButtonMask() & IN_ALT2)) NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") & ~IN_ATTACK);
 				}, hPlayer);
 			}
 		}
@@ -427,15 +438,15 @@ function TLS_Think()
 		{
 			if (hEntity.GetHealth() > 0 && NetProps.GetPropInt(hEntity, "movetype") != MOVETYPE_NONE)
 			{
-				if (CEntity(hEntity).KeyInScriptScope("trace_hull"))
+				if (KeyInScriptScope(hEntity, "trace_hull"))
 				{
 					g_aPotentialTargets.push(hEntity);
 				}
 				else
 				{
 					trace_hull_ent = SpawnEntityFromTable("info_target", {});
-					CEntity(hEntity).AttachEntity(trace_hull_ent, "head");
-					CEntity(hEntity).SetScriptScopeVar("trace_hull", trace_hull_ent);
+					AttachEntity(hEntity, trace_hull_ent, "head");
+					SetScriptScopeVar(hEntity, "trace_hull", trace_hull_ent);
 				}
 			}
 		}
@@ -443,15 +454,15 @@ function TLS_Think()
 		{
 			if (hEntity.GetHealth() > 0 && NetProps.GetPropFloat(hEntity, "m_rage") >= 1.0)
 			{
-				if (CEntity(hEntity).KeyInScriptScope("trace_hull"))
+				if (KeyInScriptScope(hEntity, "trace_hull"))
 				{
 					g_aPotentialTargets.push(hEntity);
 				}
 				else
 				{
 					trace_hull_ent = SpawnEntityFromTable("info_target", {});
-					CEntity(hEntity).AttachEntity(trace_hull_ent, "leye");
-					CEntity(hEntity).SetScriptScopeVar("trace_hull", trace_hull_ent);
+					AttachEntity(hEntity, trace_hull_ent, "leye");
+					SetScriptScopeVar(hEntity, "trace_hull", trace_hull_ent);
 				}
 			}
 		}
