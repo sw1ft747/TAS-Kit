@@ -124,8 +124,7 @@ function CustomSpawn::SetCommonPosition(hEntity, vecPos)
 	NetProps.SetPropInt(hEntity, "m_nRenderFX", 15);
 	hEntity.SetOrigin(vecPos);
 	CreateTimer(0.1, function(hEntity){
-		if (hEntity.IsValid())
-			NetProps.SetPropInt(hEntity, "m_nRenderFX", 16);
+		if (hEntity.IsValid()) NetProps.SetPropInt(hEntity, "m_nRenderFX", 16);
 	}, hEntity);
 }
 
@@ -137,19 +136,18 @@ function CustomSpawn::Think()
 		local iCount = 0;
 		while (hEntity = Entities.FindByClassname(hEntity, "infected"))
 		{
-			local Entity = CEntity(hEntity);
-			if (!Entity.KeyInScriptScope("spawned"))
+			if (!KeyInScriptScope(hEntity, "spawned"))
 			{
 				iCount++;
-				Entity.SetScriptScopeVar("spawned", true);
-				if (CustomSpawn.aSpawnPoints.len() > 0 && !Entity.KeyInScriptScope("not_finale_ci"))
+				SetScriptScopeVar(hEntity, "spawned", true);
+				if (CustomSpawn.aSpawnPoints.len() > 0 && !KeyInScriptScope(hEntity, "not_finale_ci"))
 				{
 					if (CustomSpawn.Settings.ChangePosition)
 					{
 						CustomSpawn.SetCommonPosition(hEntity, CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)]);
 						continue;
 					}
-					CEntity(SpawnZombie("infected", CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)], null, false, true)).SetScriptScopeVar("spawned", true);
+					SetScriptScopeVar(SpawnZombie("infected", CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)], null, false, true), "spawned", true);
 					hEntity.Kill();
 				}
 			}
@@ -198,9 +196,9 @@ function CustomSpawn::OnBeginCustomStage(iNum, iType)
 			local hEntity;
 			while (hEntity = Entities.FindByClassname(hEntity, "infected"))
 			{
-				if (!CEntity(hEntity).KeyInScriptScope("not_finale_ci"))
+				if (!KeyInScriptScope(hEntity, "not_finale_ci"))
 				{
-					CEntity(hEntity).SetScriptScopeVar("not_finale_ci", true);
+					SetScriptScopeVar(hEntity, "not_finale_ci", true);
 				}
 			}
 		}
