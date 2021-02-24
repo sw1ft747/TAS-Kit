@@ -123,6 +123,21 @@
 		<td>&nbsp;Add a scripted tank spawn for finale (first in - first out)</td>
 	</tr>
 	<tr>
+		<td>&nbsp;StartRecordingCI</td>
+		<td>&nbsp;void StartRecordingCI()</td>
+		<td>&nbsp;Recording position of Common Infected to dump in a file and 'playback' them</td>
+	</tr>
+	<tr>
+		<td>&nbsp;StopRecordingCI</td>
+		<td>&nbsp;void StopRecordingCI(string <i>sFileName</i> = "default")</td>
+		<td>&nbsp;Dumps recorded positions in 'left4dead2/ems/ci_recorder/<i>sFileName</i>' file</td>
+	</tr>
+	<tr>
+		<td>&nbsp;SpawnRecordedCI</td>
+		<td>&nbsp;void SpawnRecordedCI(string <i>sFileName</i> = "default")</td>
+		<td>&nbsp;Spawns Common Infected from the submitted file with a specific delay</td>
+	</tr>
+	<tr>
 		<td>&nbsp;OpenSafeRoomDoor</td>
 		<td>&nbsp;void OpenSafeRoomDoor(bool <i>bOpen</i> = false)</td>
 		<td>&nbsp;Open a saferoom door</td>
