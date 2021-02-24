@@ -13,6 +13,8 @@ g_flAimbotDistance <- 3e3;
 g_flAimbotDistanceSqr <- 9e6;
 g_aPotentialTargets <- [];
 
+if (!("g_bTLS" in this)) g_bTLS <- false;
+
 if (!("g_iAimbotUsers" in this)) g_iAimbotUsers <- 0;
 if (!("g_bHostAutoBhop" in this)) g_bHostAutoBhop <- false;
 if (!("g_bAimbot" in this)) g_bAimbot <- array(MAXCLIENTS + 1, false);
@@ -92,7 +94,6 @@ function BitInMask(iBit, iMask, bReturnInt)
 
 function PrecacheScriptSounds(hPlayer)
 {
-	local i;
 	foreach (key, val in g_tAimbotScriptSoundsList)
 	{
 		if (key == "aExceptions")
@@ -101,7 +102,7 @@ function PrecacheScriptSounds(hPlayer)
 		}
 		if (typeof val == "array")
 		{
-			for (i = 0; i < val.len(); i++)
+			for (local i = 0; i < val.len(); i++)
 			{
 				hPlayer.PrecacheScriptSound(val[i]);
 			}
@@ -109,7 +110,7 @@ function PrecacheScriptSounds(hPlayer)
 		else hPlayer.PrecacheScriptSound(val);
 	}
 	SetScriptScopeVar(hPlayer, "script_sounds_precached", true);
-	printf("[PrecacheScriptSounds] Successfully precached for player %s", hPlayer.GetPlayerName());
+	printf("[TLS] Script sounds precached for player %s", hPlayer.GetPlayerName());
 }
 
 function EmitShootSound(hPlayer)
@@ -124,14 +125,22 @@ function EmitShootSound(hPlayer)
 			local aSounds = g_tAimbotScriptSoundsList.rawget(sClass);
 			if (NetProps.GetPropInt(hWeapon, "m_hasDualWeapons"))
 			{
-				if (NetProps.GetPropInt(hWeapon, "m_iClip1") % 2 == 0) sSound = aSounds[2];
-				else sSound = aSounds[1];
+				sSound = ((NetProps.GetPropInt(hWeapon, "m_iClip1") % 2) ? aSounds[1] : aSounds[2])
 			}
-			else sSound = aSounds[0];
+			else
+			{
+				sSound = aSounds[0];
+			}
 		}
-		else sSound = g_tAimbotScriptSoundsList.rawget(sClass);
+		else
+		{
+			sSound = g_tAimbotScriptSoundsList.rawget(sClass);
+		}
 	}
-	else sSound = g_tAimbotScriptSoundsList.rawget(sClass)[BitInMask(UPGRADE_INCENDIARY_AMMO, NetProps.GetPropInt(hWeapon, "m_upgradeBitVec"), true)];
+	else
+	{
+		sSound = g_tAimbotScriptSoundsList.rawget(sClass)[BitInMask(UPGRADE_INCENDIARY_AMMO, NetProps.GetPropInt(hWeapon, "m_upgradeBitVec"), true)];
+	}
 	EmitSoundOnClient(sSound, hPlayer);
 }
 
@@ -246,7 +255,8 @@ function GetNearestEntity(hPlayer)
 	local idx = 0;
 	local length = g_aPotentialTargets.len();
 	local flDistanceSqr = g_flAimbotDistanceSqr;
-	local hEntity, vecPos, hTarget;
+	local vecPos, hTarget;
+
 	while (idx < length)
 	{
 		local hEntity;
@@ -274,6 +284,7 @@ function GetNearestEntity(hPlayer)
 				length--;
 				continue;
 			}
+
 			local flDistanceSqrTemp = (hEntity.GetOrigin() - hPlayer.EyePosition()).LengthSqr();
 			if (flDistanceSqrTemp < flDistanceSqr)
 			{
@@ -296,6 +307,7 @@ function GetNearestEntity(hPlayer)
 		}
 		idx++;
 	}
+
 	return {
 		target = hTarget
 		position = vecPos
@@ -316,7 +328,7 @@ function SetAnglesToNearestEntity(hPlayer)
 
 function OnAttackPress(hPlayer)
 {
-	if (GetConVarBool(g_ConVar_Aimbot))
+	if (g_bTLS && GetConVarBool(g_ConVar_Aimbot))
 	{
 		local idx = hPlayer.GetEntityIndex();
 		if (g_bAimbot2[idx] && !g_bAimbot[idx] && !IsPlayerUsingRagebot(hPlayer))
@@ -356,7 +368,7 @@ function OnAlt1Press(hPlayer)
 
 function OnAlt2Press(hPlayer)
 {
-	if (GetConVarBool(g_ConVar_Aimbot))
+	if (g_bTLS && GetConVarBool(g_ConVar_Aimbot))
 	{
 		if (g_bAimbot[hPlayer.GetEntityIndex()] && !IsPlayerUsingRagebot(hPlayer))
 		{
@@ -384,7 +396,7 @@ function OnAlt2Press(hPlayer)
 
 function TLS::OnWeaponFire(tParams)
 {
-	if (GetConVarBool(g_ConVar_AimbotEmitSound))
+	if (g_bTLS && GetConVarBool(g_ConVar_AimbotEmitSound))
 	{
 		if (!tParams["_player"].IsHost())
 		{
@@ -403,7 +415,7 @@ function TLS::OnPlayerFirstSpawn(tParams)
 
 function TLS::OnPlayerDisconnect(tParams)
 {
-	if (tParams["_player"])
+	if (tParams["_player"] && tParams["_player"].IsValid())
 	{
 		local idx = tParams["_player"].GetEntityIndex();
 		if (g_bAimbot[idx] || g_bAimbot2[idx] || g_bRagebot[idx])
@@ -424,16 +436,20 @@ function TLS::OnConVarAimbotRadiusChange(ConVar, LastValue, NewValue)
 
 function TLS_Think()
 {
+	if (!g_bTLS) return;
+
 	local hEntity;
 	local aSurvivors = [];
 	local bRagebot = GetConVarBool(g_ConVar_Ragebot);
 	local bAutoBhop = GetConVarBool(g_ConVar_AutoBhop);
 	local bAutoStrafer = GetConVarBool(g_ConVar_AutoStrafer);
 	local flFactor = GetConVarFloat(g_ConVar_AutoStraferFactor);
+
 	if (g_iAimbotUsers > 0)
 	{
 		local trace_hull_ent;
 		g_aPotentialTargets.clear();
+
 		while (hEntity = Entities.FindByClassname(hEntity, "infected"))
 		{
 			if (hEntity.GetHealth() > 0 && NetProps.GetPropInt(hEntity, "movetype") != MOVETYPE_NONE)
@@ -450,6 +466,8 @@ function TLS_Think()
 				}
 			}
 		}
+
+		hEntity = null;
 		while (hEntity = Entities.FindByClassname(hEntity, "witch"))
 		{
 			if (hEntity.GetHealth() > 0 && NetProps.GetPropFloat(hEntity, "m_rage") >= 1.0)
@@ -467,9 +485,12 @@ function TLS_Think()
 			}
 		}
 	}
+
+	hEntity = null;
 	while (hEntity = Entities.FindByClassname(hEntity, "player"))
 	{
 		local idx = hEntity.GetEntityIndex();
+
 		if (g_iAimbotUsers > 0)
 		{
 			if (hEntity.IsSurvivor())
@@ -481,6 +502,7 @@ function TLS_Think()
 				g_aPotentialTargets.push(hEntity);
 			}
 		}
+
 		if (bAutoBhop)
 		{
 			if (hEntity.IsAlive() && !hEntity.IsIncapacitated())
@@ -492,10 +514,14 @@ function TLS_Think()
 					{
 						NetProps.SetPropInt(hEntity, "m_afButtonDisabled", buttons | IN_JUMP);
 					}
-					else NetProps.SetPropInt(hEntity, "m_afButtonDisabled", buttons & ~IN_JUMP);
+					else
+					{
+						NetProps.SetPropInt(hEntity, "m_afButtonDisabled", buttons & ~IN_JUMP);
+					}
 				}
 			}
 		}
+
 		if (bAutoStrafer && g_bAutoStrafer[idx])
 		{
 			if (!IsPlayerUsingAimbot(hEntity) && !g_bAimbot2[idx])
@@ -515,6 +541,7 @@ function TLS_Think()
 			}
 		}
 	}
+
 	if (aSurvivors.len() > 0)
 	{
 		foreach (hPlayer in aSurvivors)
@@ -523,6 +550,7 @@ function TLS_Think()
 			{
 				local bHost = hPlayer.IsHost();
 				local bCanShoot = IsPlayerCanShoot(hPlayer, GetConVarBool(g_ConVar_AimAnyTime));
+
 				if (bCanShoot > eCanShoot.False)
 				{
 					if (SetAnglesToNearestEntity(hPlayer))
@@ -535,6 +563,7 @@ function TLS_Think()
 						}
 					}
 				}
+
 				if (bHost) SendToConsole("-attack");
 				else NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") & ~IN_ATTACK);
 			}
