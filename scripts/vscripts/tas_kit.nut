@@ -2,7 +2,7 @@
 // TAS Kit
 // Powered by AP
 
-const __TAS_KIT_VER__ = "1.0.3"
+const __TAS_KIT_VER__ = "1.1"
 const __MAIN_PATH__ = "tas_kit/"
 
 IncludeScript("modules/helper_utils");
@@ -14,6 +14,7 @@ IncludeScript("modules/tools");
 IncludeScript("modules/custom_spawn");
 IncludeScript("modules/speedrunner_tools");
 IncludeScript("modules/chat_commands");
+IncludeScript("auto_execution");
 
 cvar("sv_cheats", 1);
 cvar("sv_client_min_interp_ratio", 0);
@@ -395,6 +396,7 @@ function InitializeMapParams()
 			EntFire("compare_minifinale", "Kill");
 		}
 		// remove random escalator path
+		hTrigger = null;
 		if (hTrigger = Entities.FindByClassnameNearest("trigger_once", Vector(557.41, -2189.91, 336), 5.0))
 		{
 			hTrigger.__KeyValueFromString("targetname", "escalator_trigger");
@@ -510,7 +512,7 @@ function Countdown(iValue)
 		RegisterOnTickFunction("Countdown_Think");
 
 		CreateTimer(g_tDataTable["timer"] / 3.0, Countdown, 2);
-		CreateTimer(g_tDataTable["timer"] / 3.0 * 2, Countdown, 1);
+		CreateTimer(g_tDataTable["timer"] / 6.0, Countdown, 1);
 		CreateTimer(g_tDataTable["timer"], Countdown, 0);
 	}
 	if (iValue == 0)
