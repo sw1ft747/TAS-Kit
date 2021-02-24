@@ -60,3 +60,14 @@ Example:
 ```squirrel
 g_bAutoClimb[hPlayer.GetEntityIndex()] = false;
 ```
+
+# Totally Legit Scripts (TLS)
+Includes Aimbot, Ragebot, AutoStrafer, Auto Bunnyhop
+
+# Inclusion of all TLS functionality
+Global variable *g_bTLS* is responsible for using TLS functions (*false* by default)
+
+Enabling:
+```squirrel
+g_bTLS = true;
+```
