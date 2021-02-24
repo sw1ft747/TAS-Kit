@@ -15,35 +15,34 @@ tAutoSB <-
 			g_flFactor[tParams["_player"].GetEntityIndex()] = 0.95;
 		}
 	}
+	
 	OnAbilityActivation = function(hSpitter, hPlayer)
 	{
-		if (hPlayer)
+		if (hPlayer && g_bAutoSB[hPlayer.GetEntityIndex()] && hPlayer.IsAlive() && !hPlayer.IsIncapacitated() && NetProps.GetPropEntity(hPlayer, "m_hGroundEntity"))
 		{
-			if (g_bAutoSB[hPlayer.GetEntityIndex()] && hPlayer.IsAlive() && !hPlayer.IsIncapacitated() && NetProps.GetPropEntity(hPlayer, "m_hGroundEntity"))
+			if (!NetProps.GetPropInt(hPlayer, "m_Local.m_bDucked") && !NetProps.GetPropInt(hPlayer, "m_Local.m_bDucking"))
 			{
-				if (!NetProps.GetPropInt(hPlayer, "m_Local.m_bDucked") && !NetProps.GetPropInt(hPlayer, "m_Local.m_bDucking"))
+				if (NetProps.GetPropInt(hPlayer, "m_MoveType") == MOVETYPE_WALK && hPlayer.GetVelocity().LengthSqr() < 100 && hPlayer.GetOrigin().z - 5 > hSpitter.GetOrigin().z)
 				{
-					if (NetProps.GetPropInt(hPlayer, "m_MoveType") == MOVETYPE_WALK && hPlayer.GetVelocity().LengthSqr() < 100 && hPlayer.GetOrigin().z - 5 > hSpitter.GetOrigin().z)
+					local flDistance = (hPlayer.GetOrigin() - (hSpitter.EyePosition() + (hPlayer.GetOrigin() - hSpitter.GetOrigin()).Normalize() * 24)).Length();
+					local flJumpTime = 0.333374 + (flDistance / 900) - (0.63333 * g_flFactor[hPlayer.GetEntityIndex()]);
+					if (flJumpTime >= 0)
 					{
-						local flDistance = (hPlayer.GetOrigin() - (hSpitter.EyePosition() + (hPlayer.GetOrigin() - hSpitter.GetOrigin()).Normalize() * 24)).Length();
-						local flJumpTime = 0.333374 + (flDistance / 900) - (0.63333 * g_flFactor[hPlayer.GetEntityIndex()]);
-						if (flJumpTime >= 0)
-						{
-							SetScriptScopeVar(hSpitter, "__autosb_params__", {
-								target = hPlayer
-								spitter = hSpitter.GetEntityIndex()
-								distance = flDistance
-								jumptime = flJumpTime
-								timer = CreateTimer(flJumpTime, function(hPlayer){
-									if (hPlayer.IsValid()) hPlayer.SendInput(IN_JUMP);
-								}, hPlayer)
-							});
-						}
+						SetScriptScopeVar(hSpitter, "__autosb_params__", {
+							target = hPlayer
+							spitter = hSpitter.GetEntityIndex()
+							distance = flDistance
+							jumptime = flJumpTime
+							timer = CreateTimer(flJumpTime, function(hPlayer){
+								if (hPlayer.IsValid()) hPlayer.SendInput(IN_JUMP);
+							}, hPlayer)
+						});
 					}
 				}
 			}
 		}
 	}
+
 	bAbilityHasBeenActivated = array(MAXCLIENTS + 1, false)
 	flAbilityActivationTime = array(MAXCLIENTS + 1, 0.0)
 };
@@ -107,6 +106,7 @@ function AutoSB_Think()
 							{
 								local flGainedSpeed = NetProps.GetPropVector(tParams["target"], "m_vecBaseVelocity").Length();
 								local flGainedSpeed2D = NetProps.GetPropVector(tParams["target"], "m_vecBaseVelocity").Length2D();
+
 								printl("-------- Auto Spitterboost --------");
 								printf("Player (idx): %d\nSpitter (idx): %d\nJump time: %.03f\nDistance: %.03f\nGained speed: %.03f\nGained speed 2D: %.03f",
 									tParams["target"].GetEntityIndex(),
@@ -116,13 +116,18 @@ function AutoSB_Think()
 									flGainedSpeed,
 									flGainedSpeed2D);
 								printl("-----------------------------------");
+
 								if ("OnSpitterBoostCompleted" in getroottable())
 									::OnSpitterBoostCompleted(tParams["target"], PlayerInstanceFromIndex(tParams["spitter"]), flGainedSpeed, flGainedSpeed2D);
+
 								RemoveScriptScopeKey(hEntity, "__autosb_params__");
 							}
 						}
 					}
-					else RemoveScriptScopeKey(hEntity, "__autosb_params__");
+					else
+					{
+						RemoveScriptScopeKey(hEntity, "__autosb_params__");
+					}
 				}
 			}
 		}
@@ -141,8 +146,14 @@ function ChangeFactor_Cmd(hPlayer, sValue)
 	if (sValue != CMD_EMPTY_ARGUMENT)
 	{
 		sValue = split(sValue, " ")[0];
-		try {sValue = sValue.tofloat()}
-		catch (error) {return};
+
+		try {
+			sValue = sValue.tofloat()
+		}
+		catch (error) {
+			return
+		}
+
 		if (sValue > 0 && sValue < 2)
 		{
 			g_flFactor[hPlayer.GetEntityIndex()] = sValue;
