@@ -43,8 +43,10 @@ CustomSpawn <-
 					if (CustomSpawn.Settings.Enabled && CustomSpawn.iTankCount == CustomSpawn.Settings.MaxTanksInFinale)
 					{
 						local flTime = 0.0;
+
 						foreach (time in CustomSpawn.aPanicTime) flTime += time - CustomSpawn.Settings.PanicMinSpawnTime;
 						foreach (time in CustomSpawn.aRelaxTime) flTime += time - CustomSpawn.Settings.RelaxMinSpawnTime;
+						
 						SayMsg("Total loss time: " + flTime);
 					}
 					sayf("Tank #%d died at time: %f", CustomSpawn.iTankCount, Time() - g_flFinaleStartTime);
@@ -147,6 +149,7 @@ function CustomSpawn::Think()
 						CustomSpawn.SetCommonPosition(hEntity, CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)]);
 						continue;
 					}
+
 					SetScriptScopeVar(SpawnZombie("infected", CustomSpawn.aSpawnPoints[RandomInt(0, CustomSpawn.aSpawnPoints.len() - 1)], null, false, true), "spawned", true);
 					hEntity.Kill();
 				}
@@ -160,6 +163,9 @@ function CustomSpawn::Think()
 				CustomSpawn.bPanicStageStarted = false;
 				CustomSpawn.aPanicTime.push(flTime);
 				sayf("The wave spawned at time: %f (target: %f s)", flTime, CustomSpawn.Settings.PanicMinSpawnTime); // 3.133301 - 6.067383
+
+				if (flTime < CustomSpawn.Settings.PanicMinSpawnTime) sayf("Spawn time is lower than minimum, tell to the developer!");
+				else if (flTime > 6.067383) sayf("Spawn time is bigger than maximum, tell to the developer!");
 			}
 			else if (CustomSpawn.bRelaxStageStarted)
 			{
@@ -167,6 +173,9 @@ function CustomSpawn::Think()
 				CustomSpawn.bRelaxStageStarted = false;
 				CustomSpawn.aRelaxTime.push(flTime);
 				sayf("The wave spawned at time: %f (target: %f s)", flTime, CustomSpawn.Settings.RelaxMinSpawnTime); // 7.133331 - 11.067383
+
+				if (flTime < CustomSpawn.Settings.RelaxMinSpawnTime) sayf("Spawn time is lower than minimum, tell to the developer!");
+				else if (flTime > 11.067383) sayf("Spawn time is bigger than maximum, tell to the developer!");
 			}
 		}
 	}
@@ -210,6 +219,7 @@ function CustomSpawn::OnBeginCustomStage(iNum, iType)
 		sayf("PANIC #%d at time: %f", CustomSpawn.iPanicNum, Time() - g_flFinaleStartTime);
 		return;
 	}
+
 	if (iType == DELAY && CustomSpawn.iTankCount >= CustomSpawn.Settings.MaxTanksInFinale)
 	{
 		if (IsOnTickFunctionRegistered("CustomSpawn.Think"))
@@ -227,11 +237,13 @@ function CustomSpawn::OnFinalePause()
 		CustomSpawn.flRelaxTime = Time();
 		CustomSpawn.aSpawnPoints.clear();
 		CustomSpawn.bRelaxStageStarted = true;
+
 		if (CustomSpawn.aRelaxSpawnPoints.len() > 0)
 		{
 			CustomSpawn.aSpawnPoints.extend(CustomSpawn.aRelaxSpawnPoints[0]);
 			CustomSpawn.aRelaxSpawnPoints.remove(0);
 		}
+
 		sayf("RELAX #%d at time: %f", CustomSpawn.iRelaxNum, Time() - g_flFinaleStartTime);
 	}
 }
