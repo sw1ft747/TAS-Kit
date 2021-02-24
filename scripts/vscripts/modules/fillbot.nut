@@ -32,7 +32,7 @@ function FillBot_Think(hPlayer)
 			{
 				if (!IsPropUseTargetUsed(hEntity))
 				{
-					hPlayer.SetForwardVector(hEntity.GetOrigin() - hPlayer.EyePosition());
+					hPlayer.SetForwardVector((hEntity.GetOrigin() - hPlayer.EyePosition()).Normalize());
 					StartPouring(hPlayer);
 				}
 			}
@@ -51,7 +51,7 @@ function OnItemPickup(tParams)
 			{
 				if (!IsPropUseTargetUsed(hEntity))
 				{
-					tParams["_player"].SetForwardVector(hEntity.GetOrigin() - tParams["_player"].EyePosition());
+					tParams["_player"].SetForwardVector((hEntity.GetOrigin() - tParams["_player"].EyePosition()).Normalize());
 					StartPouring(tParams["_player"]);
 				}
 			}
