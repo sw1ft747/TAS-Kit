@@ -2,7 +2,7 @@
 // TAS Kit
 // Powered by AP
 
-const __TAS_KIT_VER__ = "1.1"
+const __TAS_KIT_VER__ = "1.1.1"
 const __MAIN_PATH__ = "tas_kit/"
 
 IncludeScript("modules/helper_utils");
@@ -512,7 +512,7 @@ function Countdown(iValue)
 		RegisterOnTickFunction("Countdown_Think");
 
 		CreateTimer(g_tDataTable["timer"] / 3.0, Countdown, 2);
-		CreateTimer(g_tDataTable["timer"] / 6.0, Countdown, 1);
+		CreateTimer(g_tDataTable["timer"] / 3.0 * 2.0, Countdown, 1);
 		CreateTimer(g_tDataTable["timer"], Countdown, 0);
 	}
 	if (iValue == 0)
