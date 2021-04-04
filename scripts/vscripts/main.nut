@@ -1,10 +1,10 @@
 // Squirrel
 
-//SkipIntro(); // skip the intro of a custom campaign
+//SkipIntro(); // skip intro of a custom campaign if such is defined
 
 SetPreviousSegmentTime(0.0); // put here (instead of '0.0') the time you got from the previous segment(s); for example: 129.133
 
-Cvars <- // console variables manager; format:  cvar_name = value(string or number)
+Cvars <- // console variables manager; format: cvar_name = value(string or number)
 {
 	mp_gamemode = "Coop"
 	z_difficulty = "Easy"
@@ -65,12 +65,12 @@ Survivors["coach"] <- // make sure that the character name is in lowercase
 	}
 }
 
-Survivors["ellis"] <- // just copypaste the Coach's table params to extend settings of these survivors; btw, format of table:  key = value
+Survivors["ellis"] <- // just copypaste the Coach's table params to extend settings of these survivors
 {
 	health = 100
 }
 
-Survivors["nick"] <-
+Survivors["nick"] <- // for L4D survivors use their names: coach -> louis, ellis -> francis, nick -> bill, rochelle -> zoey
 {
 	health = 100
 }
@@ -82,8 +82,7 @@ Survivors["rochelle"] <-
 
 function OnTriggerTouch()
 {
-	if (!activator) return;
-	if (activator.IsSurvivor() && !g_bRestarting)
+	if (activator && activator.IsSurvivor() && !g_bRestarting)
 	{
 		// sName - name of a trigger
 		// activator - player who activated a trigger
@@ -99,46 +98,57 @@ function OnTriggerTouch()
 	}
 }
 
-function __OnGameplayStart() // do some stuff when round has started
+function Callbacks::OnGameplayStart() // do some stuff when the round has started
 {
 	
 }
 
-function OnSpeedrunStart() // do some stuff when the countdown is over
+function Callbacks::OnSpeedrunStart() // do some stuff when the countdown is over
 {
 	cvar("host_timescale", 0.5);
 }
 
-function OnSpeedrunRestart() // do some stuff when the speedrun is about to restart
+function Callbacks::OnSpeedrunRestart() // do some stuff when the speedrun is about to restart
 {
 	
 }
 
-function OnFinaleStart() // do some stuff when a finale event has been started
+function Callbacks::OnFinaleStart() // do some stuff when a finale event has been started
 {
 
 }
 
-function OnRocketJumpCompleted(hPlayer, hBooster, flGainedSpeed, flGainedSpeed2D)
+function Callbacks::OnFinalePause() // called during pause stage of panic event in finales
+{
+	
+}
+
+function Callbacks::OnLastTankKilled() // called after killing specified amount of Tanks (CustomSpawn.Settings.MaxTanksInFinale)
 {
 
 }
 
-function OnBileBoostCompleted(hPlayer, hBooster, flGainedSpeed, flGainedSpeed2D)
+function Callbacks::OnRocketJumpCompleted(hPlayer, hBooster, flGainedSpeed, flGainedSpeed2D)
 {
 
 }
 
-function OnSpitterBoostCompleted(hPlayer, hSpitter, flGainedSpeed, flGainedSpeed2D)
+function Callbacks::OnBileBoostCompleted(hPlayer, hBooster, flGainedSpeed, flGainedSpeed2D)
 {
 
 }
 
-function OnBeginCustomStage(iNum, iType)
+function Callbacks::OnSpitterBoostCompleted(hPlayer, hSpitter, flGainedSpeed, flGainedSpeed2D)
+{
+
+}
+
+function Callbacks::OnBeginCustomStage(iNum, iType)
 {
 	local PANIC = 0;
 	local TANK = 1;
 	local DELAY = 2;
+
 	if (iType == PANIC)
 	{
 
