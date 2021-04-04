@@ -471,14 +471,6 @@ function SwitchRageBot_Cmd(hPlayer)
 	}
 }
 
-function SwitchAutoStrafer_Cmd(hPlayer)
-{
-	local idx = hPlayer.GetEntityIndex();
-	if (g_bAutoStrafer[idx]) EmitSoundOnClient("Buttons.snd11", hPlayer);
-	else EmitSoundOnClient("EDIT_TOGGLE_PLACE_MODE", hPlayer);
-	g_bAutoStrafer[idx] = !g_bAutoStrafer[idx];
-}
-
 function AdditionalClassMethodsInjected()
 {
 	RegisterChatCommand("!rst", RestartRound);
@@ -503,5 +495,4 @@ function AdditionalClassMethodsInjected()
 	RegisterChatCommand("!aimbot", SwitchAimbot_Cmd, true);
 	RegisterChatCommand("!aimbot2", SwitchAimbot2_Cmd, true);
 	RegisterChatCommand("!ragebot", SwitchRageBot_Cmd, true);
-	RegisterChatCommand("!autostrafer", SwitchAutoStrafer_Cmd, true);
 }
