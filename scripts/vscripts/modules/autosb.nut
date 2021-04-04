@@ -117,8 +117,8 @@ function AutoSB_Think()
 									flGainedSpeed2D);
 								printl("-----------------------------------");
 
-								if ("OnSpitterBoostCompleted" in getroottable())
-									::OnSpitterBoostCompleted(tParams["target"], PlayerInstanceFromIndex(tParams["spitter"]), flGainedSpeed, flGainedSpeed2D);
+								if ("OnSpitterBoostCompleted" in ::Callbacks)
+									::Callbacks.OnSpitterBoostCompleted(tParams["target"], PlayerInstanceFromIndex(tParams["spitter"]), flGainedSpeed, flGainedSpeed2D);
 
 								RemoveScriptScopeKey(hEntity, "__autosb_params__");
 							}
