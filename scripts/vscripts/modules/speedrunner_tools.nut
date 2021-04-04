@@ -1,15 +1,15 @@
-//Squirrel
-//(c) noa1mbot
+// Squirrel
+// (c) noa1mbot
 
 /*
-This include-file converts SourceMod commands to the VScript environment. All listed plugins must be installed in order to work properly.
-Speedrunner Tools: https://forums.alliedmods.net/showthread.php?t=304789
-Movement Reader: https://forums.alliedmods.net/showthread.php?t=309141
-Note that, some functions are related with a native function SendToConsole(), execution of them is delayed by one frame.
+	This include-file converts SourceMod commands to the VScript environment. All listed plugins must be installed in order to work properly.
+	Speedrunner Tools: https://forums.alliedmods.net/showthread.php?t=304789
+	Movement Reader: https://forums.alliedmods.net/showthread.php?t=309141
+	Note that, some functions are related with a native function SendToConsole(), execution of them is delayed by one frame.
 */
 
 //========================================================================================================================
-//SourceMod Commands
+// SourceMod Commands
 //========================================================================================================================
 
 function ClientCommand(hPlayer, sCmd)
@@ -34,7 +34,7 @@ function SetTeam(survName)
 {
 	local bValue = false;
 	local hPlayer = null;
-	while ((hPlayer = Entities.FindByClassname(hPlayer, "player")) != null)
+	while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 	{
 		if (hPlayer != Ent("!player") && hPlayer.IsSurvivor() && !IsPlayerABot(hPlayer)) return;
 		if (IsPlayerABot(hPlayer)) bValue = true;
@@ -60,7 +60,7 @@ function CallVote(hCaller, sCmd)
 	if (IsPlayerABot(hCaller)) Say(null, "[CallVote] Vote being called by a bot!", false);
 	ClientCommand(hCaller, "callvote ChangeDifficulty " + sCmd);
 	local hPlayer = null;
-	while ((hPlayer = Entities.FindByClassname(hPlayer, "player")) != null)
+	while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 	{
 		if (hCaller != hPlayer && !IsPlayerABot(hPlayer))
 		{
@@ -81,7 +81,7 @@ function PlayerReplace(hPlayer, hPlayer2)
 //============================================================
 //============================================================
 
-function AutoKick(hCaller, hPlayer, bRootKey = false)
+function AutoKick(hCaller, hPlayer)
 {
 	if (g_bRestarting) return;
 	if (!("AKTable" in getroottable()))
@@ -91,15 +91,23 @@ function AutoKick(hCaller, hPlayer, bRootKey = false)
 			playersList = []
 			OnGameEvent_round_end = function(event)
 			{
-				SendToConsole("sb_add; sb_add; sb_add; sb_add");
-				foreach (idx, player in playersList)
+				if (playersList.len() > 0)
 				{
-					if (IsPlayer(player) && !player.IsSurvivor())
+					SendToConsole("sb_add; sb_add; sb_add");
+
+					for (local i = 0; i < playersList.len(); i++)
 					{
-						ClientCommand(player, "sb_takecontrol " + ["Nick", "Rochelle", "Coach", "Ellis"][NetProps.GetPropInt(player, "m_survivorCharacter")]);
+						local hPlayer = playersList[i];
+						if (IsPlayer(hPlayer) && !hPlayer.IsSurvivor())
+						{
+							ClientCommand(hPlayer, "sb_takecontrol " + ["Nick", "Rochelle", "Coach", "Ellis"][NetProps.GetPropInt(hPlayer, "m_survivorCharacter")]);
+							playersList.remove(i);
+							i--;
+						}
 					}
+
+					SendToConsole("nb_delete_all survivor");
 				}
-				SendToConsole("nb_delete_all survivor");
 			}
 		}
 		__CollectEventCallbacks(AKTable, "OnGameEvent_", "GameEventCallbacks", RegisterScriptGameEventListener);
@@ -113,7 +121,7 @@ function AutoKick(hCaller, hPlayer, bRootKey = false)
 			AKTable.playersList.append(GetOwner(hPlayer));
 			ClientCommand(hCaller, "callvote Kick " + hPlayer.GetPlayerUserId());
 			hPlayer = null;
-			while ((hPlayer = Entities.FindByClassname(hPlayer, "player")) != null)
+			while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 			{
 				if (hCaller != hPlayer && !IsPlayerABot(hPlayer))
 				{
@@ -163,7 +171,7 @@ function ST_MRStop(hPlayer = null)
 {
 	if (IsPlayer(hPlayer)) return Convars.SetValue("st_mr_stop_player", hPlayer.GetEntityIndex());
 	hPlayer = null;
-	while ((hPlayer = Entities.FindByClassname(hPlayer, "player")) != null)
+	while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 	{
 		Convars.SetValue("st_mr_stop_player", hPlayer.GetEntityIndex());
 	}
