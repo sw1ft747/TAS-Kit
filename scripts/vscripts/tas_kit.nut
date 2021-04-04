@@ -2,9 +2,17 @@
 // TAS Kit
 // Powered by AP
 
-const __TAS_KIT_VER__ = "1.1.1"
+const __TAS_KIT_VER__ = "1.2"
 const __MAIN_PATH__ = "tas_kit/"
 
+__tEvents <- {};
+Callbacks <- {};
+g_tSegmentData <- {};
+
+g_flFinaleStartTime <- null;
+g_bSpeedrunStarted <- false;
+
+IncludeScript("modules/speedrunner_tools");
 IncludeScript("modules/helper_utils");
 IncludeScript("modules/skipintro");
 IncludeScript("modules/tls");
@@ -12,7 +20,6 @@ IncludeScript("modules/autosb");
 IncludeScript("modules/fillbot");
 IncludeScript("modules/tools");
 IncludeScript("modules/custom_spawn");
-IncludeScript("modules/speedrunner_tools");
 IncludeScript("modules/chat_commands");
 IncludeScript("auto_execution");
 
@@ -24,16 +31,10 @@ cvar("director_no_death_check", 1);
 cvar("sb_all_bot_game", 1);
 cvar("host_timescale", 1);
 cvar("z_mega_mob_size", 50);
-
-g_flFinaleStartTime <- null;
-g_bSpeedrunStarted <- false;
+cvar("director_panic_wave_pause_max", 5);
 
 if (!("g_bRestarting" in this)) g_bRestarting <- false;
 if (!("g_bApplyMapParams" in this)) g_bApplyMapParams <- true;
-
-__tEvents <- {};
-
-g_tSegmentData <- {};
 
 g_Timer <-
 {
@@ -90,7 +91,6 @@ if (!("g_tDataTable" in this))
 	}
 
 	UpdateDataTable(g_tDataTable);
-	IncludeScript("modules/template");
 }
 
 function OnGameplayStart()
@@ -102,6 +102,7 @@ function OnGameplayStart()
 	{
 		try {
 			RemoveHooks();
+			Callbacks.clear();
 			if (IncludeScript("main", this = getroottable()))
 			{
 				__SkipIntro();
@@ -239,8 +240,8 @@ function OnGameplayStart()
 					}
 				}
 
-				if ("__OnGameplayStart" in this)
-					::__OnGameplayStart();
+				if ("OnGameplayStart" in ::Callbacks)
+					::Callbacks.OnGameplayStart();
 
 				printl("[TAS Kit]\nAuthor: Sw1ft\nVersion: " + __TAS_KIT_VER__);
 				SendToServerConsole("echo Loaded the custom script file");
@@ -292,6 +293,7 @@ function IssueSurvivorEquipment(hPlayer, vecPos, eAngles, vecVel, iHealth, flHea
 		if (aInventory[6] != null) // iSecondaryWeaponClip
 			hPlayer.SetAmmo(eInventoryWeapon.Secondary, aInventory[6]);
 	}
+	
 	if (funcActions) funcActions(hPlayer);
 }
 
@@ -300,14 +302,6 @@ function RemoveHooks()
 	this = getroottable();
 	if ("Cvars" in this) delete ::Cvars;
 	if ("Survivors" in this) delete ::Survivors;
-	if ("OnSpeedrunStart" in this) delete ::OnSpeedrunStart;
-	if ("OnSpeedrunRestart" in this) delete ::OnSpeedrunRestart;
-	if ("OnFinaleStart" in this) delete ::OnFinaleStart;
-	if ("OnRocketJumpCompleted" in this) delete ::OnRocketJumpCompleted;
-	if ("OnBileBoostCompleted" in this) delete ::OnBileBoostCompleted;
-	if ("OnSpitterBoostCompleted" in this) delete ::OnSpitterBoostCompleted;
-	if ("OnBeginCustomStage" in this) delete ::OnBeginCustomStage;
-	if ("__OnGameplayStart" in this) delete ::__OnGameplayStart;
 }
 
 function OnCheckpointDoorClosed()
@@ -327,7 +321,7 @@ function RestartSpeedrun()
 		cvar("host_timescale", 1);
 		SayMsg("Restarting...");
 		EntFire("info_changelevel", "Disable");
-		if ("OnSpeedrunRestart" in getroottable()) ::OnSpeedrunRestart();
+		if ("OnSpeedrunRestart" in ::Callbacks) ::Callbacks.OnSpeedrunRestart();
 	}
 }
 
@@ -552,7 +546,7 @@ function Countdown(iValue)
 		g_tSegmentData.clear();
 
 		if (!CustomSpawn.hTriggerFinale) CustomSpawn.hTriggerFinale = Entities.FindByClassname(null, "trigger_finale");
-		if ("OnSpeedrunStart" in getroottable()) ::OnSpeedrunStart();
+		if ("OnSpeedrunStart" in ::Callbacks) ::Callbacks.OnSpeedrunStart();
 
 		return;
 	}
