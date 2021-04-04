@@ -14,13 +14,13 @@ g_flAimbotDistanceSqr <- 9e6;
 g_aPotentialTargets <- [];
 
 if (!("g_bTLS" in this)) g_bTLS <- false;
+if (!("g_bUseClientCommand" in this)) g_bUseClientCommand <- true;
 
 if (!("g_iAimbotUsers" in this)) g_iAimbotUsers <- 0;
 if (!("g_bHostAutoBhop" in this)) g_bHostAutoBhop <- false;
 if (!("g_bAimbot" in this)) g_bAimbot <- array(MAXCLIENTS + 1, false);
 if (!("g_bAimbot2" in this)) g_bAimbot2 <- array(MAXCLIENTS + 1, false);
 if (!("g_bRagebot" in this)) g_bRagebot <- array(MAXCLIENTS + 1, false);
-if (!("g_bAutoStrafer" in this)) g_bAutoStrafer <- array(MAXCLIENTS + 1, false);
 if (!("g_bAutoBhop" in this)) g_bAutoBhop <- array(MAXCLIENTS + 1, true);
 
 g_sAimbotProhibitedWeapon <-
@@ -82,14 +82,14 @@ g_ConVar_AimbotNoDoTraceLine <- CreateConVar("tls_aimbot_ignore_obstacles", 0, "
 g_ConVar_AimAnyTime <- CreateConVar("tls_aim_anytime", 0, "integer", 0, 1);
 g_ConVar_AimToHead <- CreateConVar("tls_aim_to_head", 1, "integer", 0, 1);
 g_ConVar_Ragebot <- CreateConVar("tls_ragebot", 1, "integer", 0, 1);
-g_ConVar_AutoStrafer <- CreateConVar("tls_autostrafer", 1, "integer", 0, 1);
-g_ConVar_AutoStraferFactor <- CreateConVar("tls_autostrafer_factor", 0.75, "float", 0.01, 1);
 g_ConVar_AutoBhop <- CreateConVar("tls_autobhop", 1, "integer", 0, 1);
 
-function BitInMask(iBit, iMask, bReturnInt)
+function BitInMask(iBit, iMask)
 {
-	if (iMask & iBit) return bReturnInt ? 1 : true;
-	else return bReturnInt ? 0 : false;
+	if (iMask & iBit)
+		return 1;
+
+	return 0;
 }
 
 function PrecacheScriptSounds(hPlayer)
@@ -97,18 +97,19 @@ function PrecacheScriptSounds(hPlayer)
 	foreach (key, val in g_tAimbotScriptSoundsList)
 	{
 		if (key == "aExceptions")
-		{
 			continue;
-		}
+
 		if (typeof val == "array")
 		{
 			for (local i = 0; i < val.len(); i++)
-			{
 				hPlayer.PrecacheScriptSound(val[i]);
-			}
 		}
-		else hPlayer.PrecacheScriptSound(val);
+		else
+		{
+			hPlayer.PrecacheScriptSound(val);
+		}
 	}
+
 	SetScriptScopeVar(hPlayer, "script_sounds_precached", true);
 	printf("[TLS] Script sounds precached for player %s", hPlayer.GetPlayerName());
 }
@@ -118,52 +119,64 @@ function EmitShootSound(hPlayer)
 	local sSound;
 	local hWeapon = hPlayer.GetActiveWeapon();
 	local sClass = hWeapon.GetClassname();
-	if (g_tAimbotScriptSoundsList.aExceptions.find(sClass))
+
+	if (g_tAimbotScriptSoundsList.rawin(sClass))
 	{
-		if (sClass == "weapon_pistol")
+		if (g_tAimbotScriptSoundsList.aExceptions.find(sClass) != null)
 		{
-			local aSounds = g_tAimbotScriptSoundsList.rawget(sClass);
-			if (NetProps.GetPropInt(hWeapon, "m_hasDualWeapons"))
+			if (sClass == "weapon_pistol")
 			{
-				sSound = ((NetProps.GetPropInt(hWeapon, "m_iClip1") % 2) ? aSounds[1] : aSounds[2])
+				local aScriptSounds = g_tAimbotScriptSoundsList.rawget(sClass);
+				if (NetProps.GetPropInt(hWeapon, "m_hasDualWeapons"))
+				{
+					sSound = ((NetProps.GetPropInt(hWeapon, "m_iClip1") % 2) ? aScriptSounds[1] : aScriptSounds[2])
+				}
+				else
+				{
+					sSound = aScriptSounds[0];
+				}
 			}
 			else
 			{
-				sSound = aSounds[0];
+				sSound = g_tAimbotScriptSoundsList.rawget(sClass);
 			}
 		}
 		else
 		{
-			sSound = g_tAimbotScriptSoundsList.rawget(sClass);
+			sSound = g_tAimbotScriptSoundsList.rawget(sClass)[BitInMask(UPGRADE_INCENDIARY_AMMO, NetProps.GetPropInt(hWeapon, "m_upgradeBitVec"))];
 		}
+
+		if (g_bUseClientCommand) ClientCommand(hPlayer, "playgamesound " + sSound);
+		else EmitSoundOnClient(sSound, hPlayer);
 	}
-	else
-	{
-		sSound = g_tAimbotScriptSoundsList.rawget(sClass)[BitInMask(UPGRADE_INCENDIARY_AMMO, NetProps.GetPropInt(hWeapon, "m_upgradeBitVec"), true)];
-	}
-	EmitSoundOnClient(sSound, hPlayer);
 }
 
 function IsPlayerUsingAimbot(hPlayer)
 {
-	if (GetConVarBool(g_ConVar_Aimbot) && g_bAimbot[hPlayer.GetEntityIndex()]) return true;
+	if (GetConVarBool(g_ConVar_Aimbot) && g_bAimbot[hPlayer.GetEntityIndex()])
+		return true;
+
 	return false;
 }
 
 function IsPlayerUsingRagebot(hPlayer)
 {
-	if (GetConVarBool(g_ConVar_Ragebot) && g_bRagebot[hPlayer.GetEntityIndex()]) return true;
+	if (GetConVarBool(g_ConVar_Ragebot) && g_bRagebot[hPlayer.GetEntityIndex()])
+		return true;
+
 	return false;
 }
 
 function IsPlayerCanSeeEntity(hPlayer, hTarget, vecPos)
 {
 	local hEntity = DoTraceLine(hPlayer.EyePosition(), (vecPos - hPlayer.EyePosition()).Normalize(), eTrace.Type_Hit, g_flAimbotDistance, eTrace.Mask_Shot, hPlayer);
+
 	if (hEntity)
 	{
 		if (hEntity == hTarget || hEntity.GetRootMoveParent() == hTarget) return true;
 		if (hEntity.IsPlayer() && hEntity.IsSurvivor() && hEntity.IsAttackedBySI() && hEntity.GetSIAttacker() == hTarget) return true;
 	}
+
 	return false;
 }
 
@@ -173,22 +186,19 @@ function IsPlayerCanShoot(hPlayer, bIgnoreWeaponCondition)
 	{
 		if (NetProps.GetPropInt(hPlayer, "m_MoveType") != MOVETYPE_LADDER)
 		{
-			local hWeapon = hPlayer.GetActiveWeapon();
-			if (hWeapon)
+			local hWeapon;
+			if (hWeapon = hPlayer.GetActiveWeapon())
 			{
 				if (g_sAimbotProhibitedWeapon.find(hWeapon.GetClassname()) == null)
 				{
 					if (NetProps.GetPropFloat(hWeapon, "m_flNextPrimaryAttack") - Time() < 0.2)
 					{
 						if (NetProps.GetPropInt(hWeapon, "m_iClip1") > 0)
-						{
 							return eCanShoot.True;
-						}
 					}
+
 					if (bIgnoreWeaponCondition)
-					{
 						return eCanShoot.Relatively;
-					}
 				}
 			}
 		}
@@ -234,9 +244,9 @@ function GetEntityPosition(hEntity, sClass)
 				break;
 			}
 		}
-		else
+		else if (KeyInScriptScope(hEntity, "trace_hull"))
 		{
-			vecPos = hEntity.GetBodyPosition(0.8);
+			vecPos = hEntity.GetOrigin() + (GetScriptScopeVar(hEntity, "trace_hull").GetOrigin() - hEntity.GetOrigin()) * 0.7;
 		}
 	}
 	else if (sClass == "infected" || sClass == "witch")
@@ -299,6 +309,7 @@ function GetNearestEntity(hPlayer)
 							continue;
 						}
 					}
+
 					flDistanceSqr = flDistanceSqrTemp;
 					hTarget = hEntity;
 					vecPos = vecPosTemp;
@@ -317,13 +328,14 @@ function GetNearestEntity(hPlayer)
 function SetAnglesToNearestEntity(hPlayer)
 {
 	local tParams = GetNearestEntity(hPlayer);
+
 	if (tParams["target"])
 	{
 		if (tParams["target"].GetClassname() != "infected") tParams["position"] -= tParams["target"].GetVelocity() * (NetProps.GetPropFloat(hPlayer, "m_fLerpTime") * 1.25);
 		hPlayer.SetForwardVector(tParams["position"] - hPlayer.EyePosition());
+
 		return tParams["target"];
 	}
-	return null;
 }
 
 function OnAttackPress(hPlayer)
@@ -373,9 +385,8 @@ function OnAlt2Press(hPlayer)
 		if (g_bAimbot[hPlayer.GetEntityIndex()] && !IsPlayerUsingRagebot(hPlayer))
 		{
 			if (IsPlayerCanShoot(hPlayer, GetConVarBool(g_ConVar_AimAnyTime)) > eCanShoot.False)
-			{
 				SetAnglesToNearestEntity(hPlayer);
-			}
+
 			if (hPlayer.IsHost())
 			{
 				SendToConsole("+attack");
@@ -398,12 +409,9 @@ function TLS::OnWeaponFire(tParams)
 {
 	if (g_bTLS && GetConVarBool(g_ConVar_AimbotEmitSound))
 	{
-		if (!tParams["_player"].IsHost())
+		if (!tParams["_player"].IsHost() && IsPlayerUsingAimbot(tParams["_player"]) || IsPlayerUsingRagebot(tParams["_player"]))
 		{
-			if (IsPlayerUsingAimbot(tParams["_player"]) || IsPlayerUsingRagebot(tParams["_player"]))
-			{
-				EmitShootSound(tParams["_player"]);
-			}
+			EmitShootSound(tParams["_player"]);
 		}
 	}
 }
@@ -418,12 +426,13 @@ function TLS::OnPlayerDisconnect(tParams)
 	if (tParams["_player"] && tParams["_player"].IsValid())
 	{
 		local idx = tParams["_player"].GetEntityIndex();
+
 		if (g_bAimbot[idx] || g_bAimbot2[idx] || g_bRagebot[idx])
 			g_iAimbotUsers--;
+
 		g_bAimbot[idx] = false;
 		g_bAimbot2[idx] = false;
 		g_bRagebot[idx] = false;
-		g_bAutoStrafer[idx] = false;
 		g_bAutoBhop[idx] = true;
 	}
 }
@@ -442,8 +451,6 @@ function TLS_Think()
 	local aSurvivors = [];
 	local bRagebot = GetConVarBool(g_ConVar_Ragebot);
 	local bAutoBhop = GetConVarBool(g_ConVar_AutoBhop);
-	local bAutoStrafer = GetConVarBool(g_ConVar_AutoStrafer);
-	local flFactor = GetConVarFloat(g_ConVar_AutoStraferFactor);
 
 	if (g_iAimbotUsers > 0)
 	{
@@ -497,9 +504,25 @@ function TLS_Think()
 			{
 				aSurvivors.push(hEntity);
 			}
-			else if (!hEntity.IsIncapacitated() && NetProps.GetPropInt(hEntity, "m_iObserverMode") == 0 && !NetProps.GetPropInt(hEntity, "m_isGhost"))
+			else if (!hEntity.IsIncapacitated() && !NetProps.GetPropInt(hEntity, "m_iObserverMode") && !NetProps.GetPropInt(hEntity, "m_isGhost"))
 			{
-				g_aPotentialTargets.push(hEntity);
+				if (hEntity.GetZombieType() == ZOMBIE_TANK)
+				{
+					if (KeyInScriptScope(hEntity, "trace_hull"))
+					{
+						g_aPotentialTargets.push(hEntity);
+					}
+					else
+					{
+						local trace_hull_ent = SpawnEntityFromTable("info_target", {});
+						AttachEntity(hEntity, trace_hull_ent, "mouth");
+						SetScriptScopeVar(hEntity, "trace_hull", trace_hull_ent);
+					}
+				}
+				else
+				{
+					g_aPotentialTargets.push(hEntity);
+				}
 			}
 		}
 
@@ -517,25 +540,6 @@ function TLS_Think()
 					else
 					{
 						NetProps.SetPropInt(hEntity, "m_afButtonDisabled", buttons & ~IN_JUMP);
-					}
-				}
-			}
-		}
-
-		if (bAutoStrafer && g_bAutoStrafer[idx])
-		{
-			if (!IsPlayerUsingAimbot(hEntity) && !g_bAimbot2[idx])
-			{
-				if (!(NetProps.GetPropInt(hEntity, "m_fFlags") & FL_ONGROUND) && NetProps.GetPropInt(hEntity, "m_MoveType") == MOVETYPE_WALK)
-				{
-					local vecVel = hEntity.GetVelocity();
-					if (vecVel.x != 0 && vecVel.y != 0)
-					{
-						local eAngles = hEntity.EyeAngles();
-						local flYaw = atan(vecVel.y / vecVel.x) * Math.Rad2Deg;
-						if (vecVel.x < 0) flYaw += 180;
-						eAngles.y += Math.NormalizeAngle((Math.NormalizeAngle(flYaw) - eAngles.y)) * flFactor;
-						TP(hEntity, null, eAngles, null);
 					}
 				}
 			}
@@ -657,13 +661,6 @@ function SwitchRageBot(hPlayer)
 		sayf("[Ragebot] %s for %s", (g_bRagebot[idx] ? "Disabled" : "Enabled"), hPlayer.GetPlayerName());
 		g_bRagebot[idx] = !g_bRagebot[idx];
 	}
-}
-
-function SwitchAutoStrafer(hPlayer)
-{
-	local idx = hPlayer.GetEntityIndex();
-	sayf("[Auto-Strafer] %s for %s", (g_bAutoStrafer[idx] ? "Disabled" : "Enabled"), hPlayer.GetPlayerName());
-	g_bAutoStrafer[idx] = !g_bAutoStrafer[idx];
 }
 
 function EnableAutoBhopForEveryone()
