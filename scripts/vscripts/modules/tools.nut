@@ -187,9 +187,10 @@ __tGameEventsListener <-
 				{
 					for (local i = 0; i < tCB["aList"].len(); i++)
 					{
-						if (tCB["aList"][i]["common"].IsValid())
+						local tbl = tCB["aList"][i];
+						if (tbl["common"].IsValid())
 						{
-							if (!tCB["TriggerCI"](tCB["aList"][i]["common"], hPlayer, tCB["aList"][i]["delay"], tCB["aList"][i]["ignore_dist"]))
+							if (!tCB["TriggerCI"](tbl["common"], hPlayer, tbl["delay"], tbl["ignore_dist"]))
 							{
 								continue;
 							}
@@ -205,7 +206,7 @@ __tGameEventsListener <-
 					local tParams = GetScriptScopeVar(hPlayer, "grenadeboost");
 					TP(hPlayer, null, QAngle(tParams["angle"], hPlayer.EyeAngles().y, 0.0), null);
 
-					if (tParams["target"].len() == 0)
+					if (!tParams["target"].len())
 					{
 						local hPlayerTemp;
 						while (hPlayerTemp = Entities.FindByClassname(hPlayerTemp, "player"))
@@ -276,22 +277,12 @@ __tGameEventsListener <-
 		tScriptedTankSpawn["bFinaleStarted"] = true;
 		PrintCurrentTime("Finale started at time:");
 
-		if ("OnFinaleStart" in getroottable()) ::OnFinaleStart();
+		if ("OnFinaleStart" in ::Callbacks) ::Callbacks.OnFinaleStart();
 
 		if (CustomSpawn.Settings.Enabled)
 		{
 			if (!IsOnTickFunctionRegistered("CustomSpawn.Think"))
 				RegisterOnTickFunction("CustomSpawn.Think");
-		}
-	}
-	
-	OnPlayerDisconnect = function(tParams)
-	{
-		if (tParams["_player"])
-		{
-			local idx = tParams["_player"].GetEntityIndex();
-			g_bAutoClimb[idx] = true;
-			g_iClimbDirection[idx] = 1;
 		}
 	}
 };
@@ -471,7 +462,6 @@ function SpawnZombie(sName, vecOrigin, eAngles = null, bIdle = false, bRush = fa
 		if (sTargetName[12] == 98 && "ProhibitBosses" in g_ModeScript.LocalScript.DirectorOptions && g_ModeScript.LocalScript.DirectorOptions.ProhibitBosses)
 		{
 			SayMsg("[SpawnZombie] Bosses are prohibited to spawn right now!");
-			return;
 		}
 
 		if (!eAngles)
@@ -563,7 +553,8 @@ function SpawnCommonWithBile(vecOrigin, eAngles = null, bIgnoreCEDAPopulation = 
 	local hEntity;
 	local aEntities = [];
 
-	while (hEntity = Entities.FindByClassname(hEntity, "infected")) aEntities.push(hEntity);
+	while (hEntity = Entities.FindByClassname(hEntity, "infected"))
+		aEntities.push(hEntity);
 
 	SpawnCommon("common_male_ceda", vecOrigin, kvstr(eAngles));
 
@@ -701,7 +692,7 @@ function TakeItem(hPlayer, hItem, bSetPreviousAngles = true, bSetVelocityDirecti
 			if (g_aPropPhysicsModels.find(NetProps.GetPropString(hItem, "m_ModelName")) == null) return;
 			else if (hPlayer.GetActiveWeapon() == hItem) return;
 		}
-		else if (NetProps.GetPropEntity(hItem, "m_hOwnerEntity") != null || NetProps.GetPropInt(hItem, "m_itemCount") == 0) return;
+		else if (NetProps.GetPropEntity(hItem, "m_hOwnerEntity") != null || !NetProps.GetPropInt(hItem, "m_itemCount")) return;
 
 		if ((hItem.GetOrigin() - hPlayer.EyePosition()).LengthSqr() <= 10712.897477)
 		{
@@ -738,7 +729,7 @@ function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirecti
 					if (g_aPropPhysicsModels.find(NetProps.GetPropString(hEntity, "m_ModelName")) == null) continue;
 					else if (hPlayer.GetActiveWeapon() == hEntity) continue;
 				}
-				else if (NetProps.GetPropEntity(hEntity, "m_hOwnerEntity") || NetProps.GetPropInt(hEntity, "m_itemCount") == 0) continue;
+				else if (NetProps.GetPropEntity(hEntity, "m_hOwnerEntity") || !NetProps.GetPropInt(hEntity, "m_itemCount")) continue;
 
 				local flDistanceSqr = (hEntity.GetOrigin() - hPlayer.EyePosition()).LengthSqr();
 				if (flDistanceSqr <= 10712.897477)
@@ -806,7 +797,7 @@ function UseEntity(hPlayer, hEntity, bSetPreviousAngles = true, bSetVelocityDire
 
 			if (sClass == "prop_door_rotating_checkpoint" || sClass == "prop_door_rotating")
 			{
-				if (NetProps.GetPropInt(hEntity, "m_eDoorState") == 0) AcceptEntityInput(hEntity, "PlayerOpen", "", 0.0, hPlayer);
+				if (!NetProps.GetPropInt(hEntity, "m_eDoorState")) AcceptEntityInput(hEntity, "PlayerOpen", "", 0.0, hPlayer);
 				else AcceptEntityInput(hEntity, "PlayerClose", "", 0.0, hPlayer);
 			}
 			else
@@ -875,7 +866,7 @@ function UseNearestEntity(hPlayer, bSetPreviousAngles = true, bSetVelocityDirect
 
 		if (sClass == "prop_door_rotating_checkpoint" || sClass == "prop_door_rotating")
 		{
-			if (NetProps.GetPropInt(lastEnt, "m_eDoorState") == 0) AcceptEntityInput(lastEnt, "PlayerOpen", "", 0.0, hPlayer);
+			if (!NetProps.GetPropInt(lastEnt, "m_eDoorState")) AcceptEntityInput(lastEnt, "PlayerOpen", "", 0.0, hPlayer);
 			else AcceptEntityInput(lastEnt, "PlayerClose", "", 0.0, hPlayer);
 		}
 		else hPlayer.SendInput(IN_USE);
@@ -1115,7 +1106,7 @@ function DumpInfected()
 
 	while (hEntity = Entities.FindByClassname(hEntity, "player"))
 	{
-		if (!hEntity.IsSurvivor() && !hEntity.IsIncapacitated() && NetProps.GetPropInt(hEntity, "m_iObserverMode") == 0 && !NetProps.GetPropInt(hEntity, "m_isGhost"))
+		if (!hEntity.IsSurvivor() && !hEntity.IsIncapacitated() && !NetProps.GetPropInt(hEntity, "m_iObserverMode") && !NetProps.GetPropInt(hEntity, "m_isGhost"))
 		{
 			local vecPos = hEntity.GetOrigin();
 			sData += format("SpawnZombie(\"%s\", Vector(%.03f, %.03f, %.03f));\n", aType[hEntity.GetZombieType() - 1], vecPos.x, vecPos.y, vecPos.z);
@@ -1245,6 +1236,16 @@ function SetPreviousSegmentTime(flTime)
 	{
 		g_Timer["previous_segment"] = flTime;
 	}
+}
+
+function EnableLedgeHang(hPlayer)
+{
+	AcceptEntityInput(hPlayer, "EnableLedgeHang");
+}
+
+function DisableLedgeHang(hPlayer)
+{
+	AcceptEntityInput(hPlayer, "DisableLedgeHang");
 }
 
 function EnableAutoClimb()
@@ -1417,6 +1418,7 @@ function RemoveAutoBoost(hPlayer = null)
 			}
 		}
 
+		NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") & ~(IN_ATTACK | IN_DUCK));
 		return;
 	}
 	
@@ -1429,6 +1431,8 @@ function RemoveAutoBoost(hPlayer = null)
 		RemoveScriptScopeKey(player, "rocketjump");
 		RemoveScriptScopeKey(player, "bileboost");
 		RemoveScriptScopeKey(player, "grenadeboost");
+
+		NetProps.SetPropInt(player, "m_afButtonForced", NetProps.GetPropInt(player, "m_afButtonForced") & ~(IN_ATTACK | IN_DUCK));
 	}
 }
 
@@ -1626,8 +1630,8 @@ function AutoBoost_Think()
 										flGainedSpeed2D);
 									printl("--------------------------------------");
 
-									if ("OnRocketJumpCompleted" in getroottable())
-										::OnRocketJumpCompleted(aPlayers[l], hPlayer, flGainedSpeed, flGainedSpeed2D);
+									if ("OnRocketJumpCompleted" in ::Callbacks)
+										::Callbacks.OnRocketJumpCompleted(aPlayers[l], hPlayer, flGainedSpeed, flGainedSpeed2D);
 
 									RemoveScriptScopeKey(hPlayer, "rocketjump");
 
@@ -1694,8 +1698,8 @@ function AutoBoost_Think()
 										flGainedSpeed2D);
 									printl("--------------------------------------");
 
-									if ("OnBileBoostCompleted" in getroottable())
-										::OnBileBoostCompleted(aPlayers[l], hPlayer, flGainedSpeed, flGainedSpeed2D);
+									if ("OnBileBoostCompleted" in ::Callbacks)
+										::Callbacks.OnBileBoostCompleted(aPlayers[l], hPlayer, flGainedSpeed, flGainedSpeed2D);
 
 									RemoveScriptScopeKey(hPlayer, "bileboost");
 
@@ -1730,7 +1734,7 @@ function RecordCI_Think()
 			SetScriptScopeVar(hEntity, "recorded", true);
 
 			local vecPos = hEntity.GetOrigin();
-			sData += format("SpawnCommon(\"%s\",Vector(%.03f,%.03f,%.03f),QAngle(0.0,%.03f,0.0));\n",
+			sData += format("SpawnCommon(\"%s\",Vector(%.03f, %.03f, %.03f),QAngle(0.0, %.03f, 0.0));\n",
 				split(NetProps.GetPropString(hEntity, "m_ModelName"), "/").top().slice(0, -4), vecPos.x, vecPos.y, vecPos.z, hEntity.GetAngles().y);
 		}
 	}
@@ -1755,4 +1759,3 @@ RegisterOnTickFunction("TimescaleListener");
 HookEvent("weapon_fire", __tGameEventsListener.OnWeaponFire, __tGameEventsListener);
 HookEvent("tank_spawn", __tGameEventsListener.OnTankSpawn, __tGameEventsListener);
 HookEvent("finale_start", __tGameEventsListener.OnFinaleStart, __tGameEventsListener);
-HookEvent("player_disconnect", __tGameEventsListener.OnPlayerDisconnect, __tGameEventsListener);
