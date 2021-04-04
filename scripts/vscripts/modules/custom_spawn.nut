@@ -5,20 +5,20 @@
 CustomSpawn <-
 {
 	aPanicTime = []
-	aRelaxTime = []
+	aPauseTime = []
 	aSpawnPoints = []
 	aPanicSpawnPoints = []
-	aRelaxSpawnPoints = []
+	aPauseSpawnPoints = []
 
 	iTankCount = 0
 	iPanicNum = 0
-	iRelaxNum = 0
+	iPauseNum = 0
 
 	flPanicTime = 0.0
-	flRelaxTime = 0.0
+	flPauseTime = 0.0
 
 	bPanicStageStarted = false
-	bRelaxStageStarted = false
+	bPauseStageStarted = false
 
 	hTriggerFinale = Entities.FindByClassname(null, "trigger_finale")
 
@@ -27,8 +27,8 @@ CustomSpawn <-
 		Enabled = false
 		ChangePosition = true
 		MaxTanksInFinale = 2
-		PanicMinSpawnTime = 3.133301
-		RelaxMinSpawnTime = 7.133331
+		PanicMinSpawnTime = 3.066666
+		PauseMinSpawnTime = 7.066666
 	}
 
 	OnGameEvent_player_incapacitated = function(tParams)
@@ -44,10 +44,22 @@ CustomSpawn <-
 					{
 						local flTime = 0.0;
 
-						foreach (time in CustomSpawn.aPanicTime) flTime += time - CustomSpawn.Settings.PanicMinSpawnTime;
-						foreach (time in CustomSpawn.aRelaxTime) flTime += time - CustomSpawn.Settings.RelaxMinSpawnTime;
+						foreach (time in CustomSpawn.aPanicTime)
+						{
+							local flTimeTemp = time - CustomSpawn.Settings.PanicMinSpawnTime;
+							if (flTimeTemp > 0) flTime += time - CustomSpawn.Settings.PanicMinSpawnTime;
+						}
+						
+						foreach (time in CustomSpawn.aPauseTime)
+						{
+							local flTimeTemp = time - CustomSpawn.Settings.PauseMinSpawnTime;
+							if (flTimeTemp > 0) flTime += time - CustomSpawn.Settings.PauseMinSpawnTime;
+						}
 						
 						SayMsg("Total loss time: " + flTime);
+
+						if ("OnLastTankKilled" in ::Callbacks)
+							::Callbacks.OnLastTankKilled();
 					}
 					sayf("Tank #%d died at time: %f", CustomSpawn.iTankCount, Time() - g_flFinaleStartTime);
 				}
@@ -162,20 +174,14 @@ function CustomSpawn::Think()
 				local flTime = Time() - CustomSpawn.flPanicTime;
 				CustomSpawn.bPanicStageStarted = false;
 				CustomSpawn.aPanicTime.push(flTime);
-				sayf("The wave spawned at time: %f (target: %f s)", flTime, CustomSpawn.Settings.PanicMinSpawnTime); // 3.133301 - 6.067383
-
-				if (flTime < CustomSpawn.Settings.PanicMinSpawnTime) sayf("Spawn time is lower than minimum, tell to the developer!");
-				else if (flTime > 6.067383) sayf("Spawn time is bigger than maximum, tell to the developer!");
+				sayf("The wave spawned at time: %f (target: %f s)", flTime, CustomSpawn.Settings.PanicMinSpawnTime); // 3.066666 - 6.066666 => 2 ticks * framerate + RandomFloat(1.0, 2.0) + RandomFloat(2.0, 4.0)
 			}
-			else if (CustomSpawn.bRelaxStageStarted)
+			else if (CustomSpawn.bPauseStageStarted)
 			{
-				local flTime = Time() - CustomSpawn.flRelaxTime;
-				CustomSpawn.bRelaxStageStarted = false;
-				CustomSpawn.aRelaxTime.push(flTime);
-				sayf("The wave spawned at time: %f (target: %f s)", flTime, CustomSpawn.Settings.RelaxMinSpawnTime); // 7.133331 - 11.067383
-
-				if (flTime < CustomSpawn.Settings.RelaxMinSpawnTime) sayf("Spawn time is lower than minimum, tell to the developer!");
-				else if (flTime > 11.067383) sayf("Spawn time is bigger than maximum, tell to the developer!");
+				local flTime = Time() - CustomSpawn.flPauseTime;
+				CustomSpawn.bPauseStageStarted = false;
+				CustomSpawn.aPauseTime.push(flTime);
+				sayf("The wave spawned at time: %f (target: %f s)", flTime, CustomSpawn.Settings.PauseMinSpawnTime); // 7.066666 - 11.066666 => 2 ticks * framerate + RandomFloat(5.0, 7.0) + RandomFloat(2.0, 4.0)
 			}
 		}
 	}
@@ -183,8 +189,8 @@ function CustomSpawn::Think()
 
 function CustomSpawn::OnBeginCustomStage(iNum, iType)
 {
-	if ("OnBeginCustomStage" in getroottable())
-		::OnBeginCustomStage(iNum, iType);
+	if ("OnBeginCustomStage" in ::Callbacks)
+		::Callbacks.OnBeginCustomStage(iNum, iType);
 
 	if (!CustomSpawn.Settings.Enabled)
 		return;
@@ -233,18 +239,21 @@ function CustomSpawn::OnFinalePause()
 {
 	if (CustomSpawn.Settings.Enabled)
 	{
-		CustomSpawn.iRelaxNum++;
-		CustomSpawn.flRelaxTime = Time();
+		CustomSpawn.iPauseNum++;
+		CustomSpawn.flPauseTime = Time();
 		CustomSpawn.aSpawnPoints.clear();
-		CustomSpawn.bRelaxStageStarted = true;
+		CustomSpawn.bPauseStageStarted = true;
 
-		if (CustomSpawn.aRelaxSpawnPoints.len() > 0)
+		if (CustomSpawn.aPauseSpawnPoints.len() > 0)
 		{
-			CustomSpawn.aSpawnPoints.extend(CustomSpawn.aRelaxSpawnPoints[0]);
-			CustomSpawn.aRelaxSpawnPoints.remove(0);
+			CustomSpawn.aSpawnPoints.extend(CustomSpawn.aPauseSpawnPoints[0]);
+			CustomSpawn.aPauseSpawnPoints.remove(0);
 		}
 
-		sayf("RELAX #%d at time: %f", CustomSpawn.iRelaxNum, Time() - g_flFinaleStartTime);
+		if ("OnFinalePause" in ::Callbacks)
+			::Callbacks.OnFinalePause();
+
+		sayf("PAUSE #%d at time: %f", CustomSpawn.iPauseNum, Time() - g_flFinaleStartTime);
 	}
 }
 
