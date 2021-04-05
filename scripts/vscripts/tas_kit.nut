@@ -2,7 +2,7 @@
 // TAS Kit
 // Powered by AP
 
-const __TAS_KIT_VER__ = "1.2"
+const __TAS_KIT_VER__ = "1.2.1"
 const __MAIN_PATH__ = "tas_kit/"
 
 __tEvents <- {};
@@ -19,7 +19,7 @@ IncludeScript("modules/tls");
 IncludeScript("modules/autosb");
 IncludeScript("modules/fillbot");
 IncludeScript("modules/tools");
-IncludeScript("modules/custom_spawn");
+IncludeScript("modules/finale_manager");
 IncludeScript("modules/chat_commands");
 IncludeScript("auto_execution");
 
@@ -321,7 +321,9 @@ function RestartSpeedrun()
 		cvar("host_timescale", 1);
 		SayMsg("Restarting...");
 		EntFire("info_changelevel", "Disable");
-		if ("OnSpeedrunRestart" in ::Callbacks) ::Callbacks.OnSpeedrunRestart();
+
+		if ("OnSpeedrunRestart" in ::Callbacks)
+			::Callbacks.OnSpeedrunRestart();
 	}
 }
 
@@ -412,6 +414,13 @@ function InitializeMapParams()
 		EntFire("stadium_exit_right_template", "Kill");
 		EntFire("stadium_exit_left_relay", "Enable");
 		EntFire("stadium_exit_left_template", "ForceSpawn");
+
+		CreateTimer(0.1, function(){
+			EntFire("stadium_exit_right_relay", "Disable");
+			EntFire("stadium_exit_right_template", "Kill");
+			EntFire("stadium_exit_left_relay", "Enable");
+			EntFire("stadium_exit_left_template", "ForceSpawn");
+		});
 		break;
 
 	case "c5m3_cemetery":
@@ -509,6 +518,7 @@ function Countdown(iValue)
 		CreateTimer(g_tDataTable["timer"] / 3.0 * 2.0, Countdown, 1);
 		CreateTimer(g_tDataTable["timer"], Countdown, 0);
 	}
+
 	if (iValue == 0)
 	{
 		RemoveOnTickFunction("Countdown_Think");
@@ -545,11 +555,18 @@ function Countdown(iValue)
 
 		g_tSegmentData.clear();
 
-		if (!CustomSpawn.hTriggerFinale) CustomSpawn.hTriggerFinale = Entities.FindByClassname(null, "trigger_finale");
-		if ("OnSpeedrunStart" in ::Callbacks) ::Callbacks.OnSpeedrunStart();
+		if (!FinaleManager.hTriggerFinale)
+		{
+			FinaleManager.hTriggerFinale = Entities.FindByClassname(null, "trigger_finale");
+			FinaleManager.HookTriggerFinale();
+		}
+
+		if ("OnSpeedrunStart" in ::Callbacks)
+			::Callbacks.OnSpeedrunStart();
 
 		return;
 	}
+
 	SayMsg(iValue);
 }
 
