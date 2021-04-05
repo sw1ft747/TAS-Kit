@@ -165,6 +165,7 @@ __tGameEventsListener <-
 	{
 		local sWeapon = tParams["weapon"];
 		local hPlayer = tParams["_player"];
+
 		if (!IsPlayerABot(hPlayer) && !hPlayer.IsIncapacitated())
 		{
 			if (sWeapon != "vomitjar")
@@ -188,13 +189,10 @@ __tGameEventsListener <-
 					for (local i = 0; i < tCB["aList"].len(); i++)
 					{
 						local tbl = tCB["aList"][i];
-						if (tbl["common"].IsValid())
-						{
-							if (!tCB["TriggerCI"](tbl["common"], hPlayer, tbl["delay"], tbl["ignore_dist"]))
-							{
-								continue;
-							}
-						}
+
+						if (tbl["common"].IsValid() && !tCB["TriggerCI"](tbl["common"], hPlayer, tbl["delay"], tbl["ignore_dist"]))
+							continue;
+						
 						tCB["aList"].remove(i);
 						i--;
 					}
@@ -252,7 +250,7 @@ __tGameEventsListener <-
 	{
 		if (tScriptedTankSpawn["bFinaleStarted"])
 		{
-			CustomSpawn.iTankCount++;
+			FinaleManager.iTankCount++;
 
 			if (tScriptedTankSpawn["aScriptedSpawns"].len() > 0)
 			{
@@ -264,9 +262,9 @@ __tGameEventsListener <-
 				tScriptedTankSpawn["aScriptedSpawns"].remove(0);
 			}
 
-			if (CustomSpawn.iTankCount <= CustomSpawn.Settings.MaxTanksInFinale)
+			if (FinaleManager.iTankCount <= FinaleManager.Settings.MaxTanksInFinale)
 			{
-				sayf("Tank #%d spawned at time: %f", CustomSpawn.iTankCount, Time() - g_flFinaleStartTime);
+				sayf("Tank #%d spawned at time: %f", FinaleManager.iTankCount, Time() - g_flFinaleStartTime);
 			}
 		}
 	}
@@ -277,12 +275,13 @@ __tGameEventsListener <-
 		tScriptedTankSpawn["bFinaleStarted"] = true;
 		PrintCurrentTime("Finale started at time:");
 
-		if ("OnFinaleStart" in ::Callbacks) ::Callbacks.OnFinaleStart();
+		if ("OnFinaleStart" in ::Callbacks)
+			::Callbacks.OnFinaleStart();
 
-		if (CustomSpawn.Settings.Enabled)
+		if (FinaleManager.Settings.Enabled)
 		{
-			if (!IsOnTickFunctionRegistered("CustomSpawn.Think"))
-				RegisterOnTickFunction("CustomSpawn.Think");
+			if (!IsOnTickFunctionRegistered("FinaleManager.Think"))
+				RegisterOnTickFunction("FinaleManager.Think");
 		}
 	}
 };
@@ -737,9 +736,8 @@ function TakeNearestItem(hPlayer, bSetPreviousAngles = true, bSetVelocityDirecti
 					if (lastEnt)
 					{
 						if (flDistanceSqr < (lastEnt.GetOrigin() - hPlayer.EyePosition()).LengthSqr())
-						{
 							lastEnt = hEntity;
-						}
+
 						continue;
 					}
 					lastEnt = hEntity;
@@ -847,9 +845,8 @@ function UseNearestEntity(hPlayer, bSetPreviousAngles = true, bSetVelocityDirect
 					if (lastEnt)
 					{
 						if (flDistanceSqr < (lastEnt.GetOrigin() - hPlayer.EyePosition()).LengthSqr())
-						{
 							lastEnt = hEntity;
-						}
+
 						continue;
 					}
 					lastEnt = hEntity;
@@ -1047,6 +1044,7 @@ function OpenSafeRoomDoor(bOpen = false)
 				local hPlayer, hPlayerTemp;
 				local flDistanceSqr = 250000.0;
 				local flDistanceSqrTemp = 0.0;
+
 				while (hPlayerTemp = Entities.FindByClassname(hPlayerTemp, "player"))
 				{
 					if (hPlayerTemp.IsSurvivor() && (flDistanceSqrTemp = (hEntity.GetOrigin() - hPlayerTemp.GetOrigin()).LengthSqr()) < flDistanceSqr)
@@ -1055,6 +1053,7 @@ function OpenSafeRoomDoor(bOpen = false)
 						hPlayer = hPlayerTemp;
 					}
 				}
+
 				AcceptEntityInput(hEntity, "PlayerOpen", "", 0.0, hPlayer);
 				break;
 			}
@@ -1083,6 +1082,7 @@ function CloseSafeRoomDoor(bBeginningDoor = true)
 			local hPlayer, hPlayerTemp;
 			local flDistanceSqr = 250000.0;
 			local flDistanceSqrTemp = 0.0;
+
 			while (hPlayerTemp = Entities.FindByClassname(hPlayerTemp, "player"))
 			{
 				if (hPlayerTemp.IsSurvivor() && (flDistanceSqrTemp = (hEntity.GetOrigin() - hPlayerTemp.GetOrigin()).LengthSqr()) < flDistanceSqr)
@@ -1091,6 +1091,7 @@ function CloseSafeRoomDoor(bBeginningDoor = true)
 					hPlayer = hPlayerTemp;
 				}
 			}
+
 			AcceptEntityInput(hEntity, "PlayerClose", "", 0.0, hPlayer);
 			break;
 		}
@@ -1203,6 +1204,7 @@ function DebugItems(sItemName = null)
 			}
 		}
 	}
+
 	if (iCount > 0) SayMsg("[Debug Items] Total count: " + iCount);
 	return iCount;
 }
@@ -1291,11 +1293,9 @@ function AutoBoost_IsCanShoot(hPlayer, aPlayers, hTarget, flRadius, bMethod2D, b
 {
 	if (hTarget)
 	{
-		if (bIgnorePlayersOnGround)
-		{
-			if (NetProps.GetPropEntity(hTarget, "m_hGroundEntity"))
-				return false;
-		}
+		if (bIgnorePlayersOnGround && NetProps.GetPropEntity(hTarget, "m_hGroundEntity"))
+			return false;
+
 		return GetDistanceToEntity(hPlayer, hTarget, true, bMethod2D) < flRadius;
 	}
 	else
@@ -1554,9 +1554,7 @@ function AutoBileBreaker_Think()
 			}
 
 			if (tScope["distance"] > 4900 || bAtleastOnceProcessed || bThrowerOnly)
-			{
 				continue;
-			}
 
 			SpawnBileEffect(hEntity.GetOrigin());
 			hEntity.Kill();
