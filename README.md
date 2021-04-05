@@ -14,8 +14,6 @@ Note: The core of **TASK** is Library of Utils which greatly expands the possibi
 
 * Ragebot
 
-* Simple Autostrafer
-
 * Auto Spitterboost
 
 * Auto Climb
@@ -35,7 +33,7 @@ Note: The core of **TASK** is Library of Utils which greatly expands the possibi
 # Installing
 Download the release archive, place **tas_kit.vpk** and **finales_hook_master.vpk** in ***Left 4 Dead 2/left4dead2/addons/*** folder
 
-You can use **remove_timer.vpk** addon to hide Timer during demo playback
+You can use **remove_timer.vpk** add-on to hide Timer during demo playback
 
 Place **main.nut** file in ***Left 4 Dead 2/left4dead2/scripts/vscripts/*** folder
 
