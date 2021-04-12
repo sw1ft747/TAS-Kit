@@ -1,5 +1,5 @@
 # TAS Kit
-VScript tools for Left 4 Dead 2 TAS xd
+VScript tools for implementing TAS in Left 4 Dead 2
 
 Note: The core of **TASK** is Library of Utils which greatly expands the possibilities in scripting
 
@@ -24,7 +24,7 @@ Note: The core of **TASK** is Library of Utils which greatly expands the possibi
 
 * Advanced hooks for convenient using
 
-* Custom Spawn for CI
+* Finale Manager
 
 * Various tools package
 
