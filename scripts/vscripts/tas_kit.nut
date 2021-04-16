@@ -2,7 +2,243 @@
 // TAS Kit
 // Powered by AP
 
-const __TAS_KIT_VER__ = "1.2.1"
+class CScriptPluginTASKit extends IScriptPlugin
+{
+	function Load()
+	{
+		local roottable = getroottable();
+
+		this.LoadModules(roottable);
+
+		cvar("sv_cheats", 1);
+		cvar("sv_client_min_interp_ratio", 0);
+		cvar("sv_vote_creation_timer", 0);
+		cvar("director_afk_timeout", 999999);
+		cvar("director_no_death_check", 1);
+		cvar("sb_all_bot_game", 1);
+		cvar("host_timescale", 1);
+		cvar("z_mega_mob_size", 50);
+		cvar("director_panic_wave_pause_max", 5);
+
+		HookEvent("player_falldamage", __tEvents.OnPlayerFallDamage, __tEvents);
+
+		InitializeHUD();
+		InitializeMapParams();
+
+		if (g_bRestarting)
+		{
+			try {
+				RemoveHooks();
+				Callbacks.clear();
+				if (IncludeScript("main", roottable))
+				{
+					__SkipIntro();
+					InitializeHooks();
+					Countdown(3);
+
+					if ("Cvars" in roottable)
+					{
+						foreach (key, val in Cvars)
+						{
+							cvar(key, val.tostring());
+						}
+					}
+
+					if ("Survivors" in roottable)
+					{
+						local hPlayer, aVars, bIdle, eAngles, vecPos;
+						foreach (char, tbl in Survivors)
+						{
+							bIdle = false;
+							vecPos = null;
+							eAngles = null;
+							aVars = array(8, null);
+
+							if (tbl.rawin("origin") && tbl["origin"])
+							{
+								aVars[0] = tbl["origin"];
+								vecPos = tbl["origin"];
+							}
+
+							if (tbl.rawin("angles") && tbl["angles"])
+							{
+								aVars[1] = tbl["angles"];
+								eAngles = tbl["angles"];
+							}
+
+							if (tbl.rawin("velocity") && tbl["velocity"]) aVars[2] = tbl["velocity"];
+
+							if (tbl.rawin("health") && tbl["health"] != null) aVars[3] = tbl["health"];
+
+							if (tbl.rawin("buffer") && tbl["buffer"] != null) aVars[4] = tbl["buffer"];
+
+							if (tbl.rawin("revives") && tbl["revives"] != null) aVars[5] = tbl["revives"];
+
+							if (tbl.rawin("idle") && tbl["idle"]) bIdle = true;
+
+							if (tbl.rawin("Inventory") && tbl["Inventory"]) {
+								local aWeaponList = [];
+								local aInv = array(7, null);
+								local tInv = tbl["Inventory"];
+								local sActiveWeapon, bDual;
+
+								if (tInv.rawin("active_slot") && !tInv.rawin("slot5") && tInv["active_slot"])
+								{
+									local sSlot = tInv["active_slot"];
+									sActiveWeapon = (sSlot.slice(-1).tointeger() < 2 ? tInv[sSlot]["weapon"] : tInv[sSlot]);
+								}
+
+								if (tInv.rawin("slot0") && tInv["slot0"])
+								{
+									if (tInv["slot0"].rawin("clip")) aInv[2] = tInv["slot0"]["clip"];
+									if (tInv["slot0"].rawin("ammo")) aInv[3] = tInv["slot0"]["ammo"];
+									if (tInv["slot0"].rawin("upgrade_type")) aInv[4] = tInv["slot0"]["upgrade_type"];
+									if (tInv["slot0"].rawin("upgrade_clip")) aInv[5] = tInv["slot0"]["upgrade_clip"];
+								}
+
+								if (tInv.rawin("slot1") && tInv["slot1"])
+								{
+									if (tInv["slot1"].rawin("clip")) aInv[6] = tInv["slot1"]["clip"];
+									bDual = tInv["slot1"].rawin("dual") && tInv["slot1"]["dual"];
+								}
+
+								foreach (slot, val in tInv)
+								{
+									if (val)
+									{
+										if (slot == "slot0")
+										{
+											aWeaponList.push(val["weapon"]);
+										}
+										else if (slot == "slot1")
+										{
+											if (bDual && val["weapon"] == "pistol") aWeaponList.push("pistol");
+											aWeaponList.push(val["weapon"]);
+										}
+										else if (slot != "slot5" && slot != "active_slot")
+										{
+											aWeaponList.push(val);
+										}
+									}
+								}
+
+								if (sActiveWeapon)
+								{
+									for (local i = 0; i < aWeaponList.len(); i++)
+									{
+										if (aWeaponList[i] == sActiveWeapon)
+										{
+											if (bDual && sActiveWeapon == "pistol")
+											{
+												aWeaponList.push("pistol");
+												aWeaponList.remove(i + 1);
+											}
+											aWeaponList.push(aWeaponList[i]);
+											aWeaponList.remove(i);
+										}
+									}
+								}
+								else if (tInv.rawin("slot5") && tInv["slot5"])
+								{
+									aWeaponList.push(tInv["slot5"]);
+								}
+
+								aInv[0] = aWeaponList;
+								aInv[1] = sActiveWeapon;
+								aVars[6] = aInv;
+							}
+
+							if ("Actions" in tbl && tbl["Actions"]) aVars[7] = tbl["Actions"];
+
+							if (hPlayer = Entities.FindByName(null, "!" + char))
+							{
+								if (vecPos || eAngles)
+								{
+									TP(hPlayer, vecPos, eAngles);
+								}
+								if (bIdle)
+								{
+									if (hPlayer.IsHost()) SendToServerConsole("go_away_from_keyboard");
+									SendToServerConsole("sm_idle " + hPlayer.GetEntityIndex());
+								}
+							}
+
+							g_tSegmentData[char] <- aVars;
+						}
+					}
+
+					if ("OnGameplayStart" in ::Callbacks)
+						::Callbacks.OnGameplayStart();
+
+					printl("[TAS Kit]\nAuthor: Sw1ft\nVersion: " + __TAS_KIT_VER__);
+					SendToServerConsole("echo Loaded the custom script file");
+					return;
+				}
+				else
+				{
+					g_bRestarting = false;
+					SayMsg("File 'main.nut' not found in the '.../scripts/vscripts' folder");
+				}
+			}
+			catch (error) {
+				g_bRestarting = false;
+				SayMsg("An error has occurred while executing the script file");
+				SayMsg("Check the console for more information");
+			}
+		}
+
+		EntFire("info_changelevel", "Disable");
+		printl("[TAS Kit]\nAuthor: Sw1ft\nVersion: " + __TAS_KIT_VER__);
+	}
+
+	function Unload()
+	{
+
+	}
+
+	function OnRoundStartPost()
+	{
+		
+	}
+
+	function OnRoundEnd()
+	{
+
+	}
+
+	function AdditionalClassMethodsInjected()
+	{
+
+	}
+
+	function GetClassName() { return m_sClassName; }
+
+	function GetScriptPluginName() { return m_sScriptPluginName; }
+
+	function GetInterfaceVersion() { return m_InterfaceVersion; }
+
+	function LoadModules(scope)
+	{
+		IncludeScript("modules/speedrunner_tools", scope);
+		IncludeScript("modules/helper_utils", scope);
+		IncludeScript("modules/skipintro", scope);
+		IncludeScript("modules/tls", scope);
+		IncludeScript("modules/autosb", scope);
+		IncludeScript("modules/fillbot", scope);
+		IncludeScript("modules/tools", scope);
+		IncludeScript("modules/finale_manager", scope);
+		IncludeScript("modules/chat_commands", scope);
+		IncludeScript("auto_execution", scope);
+	}
+
+	function _set(key, val) { throw null; }
+
+	static m_InterfaceVersion = 1;
+	static m_sClassName = "CScriptPluginTASKit";
+	static m_sScriptPluginName = "TAS Kit";
+}
+
+const __TAS_KIT_VER__ = "1.3"
 const __MAIN_PATH__ = "tas_kit/"
 
 __tEvents <- {};
@@ -12,26 +248,7 @@ g_tSegmentData <- {};
 g_flFinaleStartTime <- null;
 g_bSpeedrunStarted <- false;
 
-IncludeScript("modules/speedrunner_tools");
-IncludeScript("modules/helper_utils");
-IncludeScript("modules/skipintro");
-IncludeScript("modules/tls");
-IncludeScript("modules/autosb");
-IncludeScript("modules/fillbot");
-IncludeScript("modules/tools");
-IncludeScript("modules/finale_manager");
-IncludeScript("modules/chat_commands");
-IncludeScript("auto_execution");
-
-cvar("sv_cheats", 1);
-cvar("sv_client_min_interp_ratio", 0);
-cvar("sv_vote_creation_timer", 0);
-cvar("director_afk_timeout", 999999);
-cvar("director_no_death_check", 1);
-cvar("sb_all_bot_game", 1);
-cvar("host_timescale", 1);
-cvar("z_mega_mob_size", 50);
-cvar("director_panic_wave_pause_max", 5);
+g_TASKit <- CScriptPluginTASKit();
 
 if (!("g_bRestarting" in this)) g_bRestarting <- false;
 if (!("g_bApplyMapParams" in this)) g_bApplyMapParams <- true;
@@ -91,177 +308,6 @@ if (!("g_tDataTable" in this))
 	}
 
 	UpdateDataTable(g_tDataTable);
-}
-
-function OnGameplayStart()
-{
-	InitializeHUD();
-	InitializeMapParams();
-
-	if (g_bRestarting)
-	{
-		try {
-			RemoveHooks();
-			Callbacks.clear();
-			if (IncludeScript("main", this = getroottable()))
-			{
-				__SkipIntro();
-				InitializeHooks();
-				Countdown(3);
-
-				if ("Cvars" in this)
-				{
-					foreach (key, val in Cvars)
-					{
-						cvar(key, val.tostring());
-					}
-				}
-
-				if ("Survivors" in this)
-				{
-					local hPlayer, aVars, bIdle, eAngles, vecPos;
-					foreach (char, tbl in Survivors)
-					{
-						bIdle = false;
-						vecPos = null;
-						eAngles = null;
-						aVars = array(8, null);
-
-						if (tbl.rawin("origin") && tbl["origin"])
-						{
-							aVars[0] = tbl["origin"];
-							vecPos = tbl["origin"];
-						}
-
-						if (tbl.rawin("angles") && tbl["angles"])
-						{
-							aVars[1] = tbl["angles"];
-							eAngles = tbl["angles"];
-						}
-
-						if (tbl.rawin("velocity") && tbl["velocity"]) aVars[2] = tbl["velocity"];
-
-						if (tbl.rawin("health") && tbl["health"] != null) aVars[3] = tbl["health"];
-
-						if (tbl.rawin("buffer") && tbl["buffer"] != null) aVars[4] = tbl["buffer"];
-
-						if (tbl.rawin("revives") && tbl["revives"] != null) aVars[5] = tbl["revives"];
-
-						if (tbl.rawin("idle") && tbl["idle"]) bIdle = true;
-
-						if (tbl.rawin("Inventory") && tbl["Inventory"]) {
-							local aWeaponList = [];
-							local aInv = array(7, null);
-							local tInv = tbl["Inventory"];
-							local sActiveWeapon, bDual;
-
-							if (tInv.rawin("active_slot") && !tInv.rawin("slot5") && tInv["active_slot"])
-							{
-								local sSlot = tInv["active_slot"];
-								sActiveWeapon = (sSlot.slice(-1).tointeger() < 2 ? tInv[sSlot]["weapon"] : tInv[sSlot]);
-							}
-
-							if (tInv.rawin("slot0") && tInv["slot0"])
-							{
-								if (tInv["slot0"].rawin("clip")) aInv[2] = tInv["slot0"]["clip"];
-								if (tInv["slot0"].rawin("ammo")) aInv[3] = tInv["slot0"]["ammo"];
-								if (tInv["slot0"].rawin("upgrade_type")) aInv[4] = tInv["slot0"]["upgrade_type"];
-								if (tInv["slot0"].rawin("upgrade_clip")) aInv[5] = tInv["slot0"]["upgrade_clip"];
-							}
-
-							if (tInv.rawin("slot1") && tInv["slot1"])
-							{
-								if (tInv["slot1"].rawin("clip")) aInv[6] = tInv["slot1"]["clip"];
-								bDual = tInv["slot1"].rawin("dual") && tInv["slot1"]["dual"];
-							}
-
-							foreach (slot, val in tInv)
-							{
-								if (val)
-								{
-									if (slot == "slot0")
-									{
-										aWeaponList.push(val["weapon"]);
-									}
-									else if (slot == "slot1")
-									{
-										if (bDual && val["weapon"] == "pistol") aWeaponList.push("pistol");
-										aWeaponList.push(val["weapon"]);
-									}
-									else if (slot != "slot5" && slot != "active_slot")
-									{
-										aWeaponList.push(val);
-									}
-								}
-							}
-
-							if (sActiveWeapon)
-							{
-								for (local i = 0; i < aWeaponList.len(); i++)
-								{
-									if (aWeaponList[i] == sActiveWeapon)
-									{
-										if (bDual && sActiveWeapon == "pistol")
-										{
-											aWeaponList.push("pistol");
-											aWeaponList.remove(i + 1);
-										}
-										aWeaponList.push(aWeaponList[i]);
-										aWeaponList.remove(i);
-									}
-								}
-							}
-							else if (tInv.rawin("slot5") && tInv["slot5"])
-							{
-								aWeaponList.push(tInv["slot5"]);
-							}
-
-							aInv[0] = aWeaponList;
-							aInv[1] = sActiveWeapon;
-							aVars[6] = aInv;
-						}
-
-						if ("Actions" in tbl && tbl["Actions"]) aVars[7] = tbl["Actions"];
-
-						if (hPlayer = Entities.FindByName(null, "!" + char))
-						{
-							if (vecPos || eAngles)
-							{
-								TP(hPlayer, vecPos, eAngles);
-							}
-							if (bIdle)
-							{
-								if (hPlayer.IsHost()) SendToServerConsole("go_away_from_keyboard");
-								SendToServerConsole("sm_idle " + hPlayer.GetEntityIndex());
-							}
-						}
-
-						g_tSegmentData[char] <- aVars;
-					}
-				}
-
-				if ("OnGameplayStart" in ::Callbacks)
-					::Callbacks.OnGameplayStart();
-
-				printl("[TAS Kit]\nAuthor: Sw1ft\nVersion: " + __TAS_KIT_VER__);
-				SendToServerConsole("echo Loaded the custom script file");
-				return;
-			}
-			else
-			{
-				g_bRestarting = false;
-				SayMsg("File 'main.nut' not found in the '.../scripts/vscripts' folder");
-			}
-		}
-		catch (error) {
-			g_bRestarting = false;
-			SayMsg("An error has occurred while executing the script file");
-			SayMsg("Check the console for more information");
-		}
-	}
-
-	EntFire("info_changelevel", "Disable");
-	printl("[TAS Kit]\nAuthor: Sw1ft\nVersion: " + __TAS_KIT_VER__);
 }
 
 function IssueSurvivorEquipment(hPlayer, vecPos, eAngles, vecVel, iHealth, flHealthBuffer, iRevivies, aInventory, funcActions)
@@ -557,8 +603,8 @@ function Countdown(iValue)
 
 		if (!FinaleManager.hTriggerFinale)
 		{
-			FinaleManager.hTriggerFinale = Entities.FindByClassname(null, "trigger_finale");
-			FinaleManager.HookTriggerFinale();
+			if (FinaleManager.hTriggerFinale = Entities.FindByClassname(null, "trigger_finale"))
+				FinaleManager.HookTriggerFinale();
 		}
 
 		if ("OnSpeedrunStart" in ::Callbacks)
@@ -580,4 +626,4 @@ function __tEvents::OnPlayerDisconnect(tParams) OnCheckpointDoorClosed();
 
 function __tEvents::OnPlayerFallDamage(tParams) if (g_tDataTable["fdmg"]) sayf("Player %s fdmg %.01f", tParams["_player"].GetPlayerName(), tParams["damage"]);
 
-HookEvent("player_falldamage", __tEvents.OnPlayerFallDamage, __tEvents);
+g_ScriptPluginsHelper.AddScriptPlugin(g_TASKit);
