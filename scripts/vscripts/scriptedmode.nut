@@ -31,7 +31,7 @@ function smDbgLoud( string )
 //-------------------------------------
 BaseScriptedDOTable <-
 {
-	/*
+	
 	ScriptedStageType = STAGE_NONE
 	ScriptedStageValue = 1000
 	SpawnSetRule = SPAWN_SURVIVORS
@@ -39,7 +39,7 @@ BaseScriptedDOTable <-
 	SpawnDirectionCount = 0
 	SpawnDirectionMask = 0
 	cm_AggressiveSpecials = 1
-	*/
+	
 }
 
 //---------------------------------------------------------
@@ -90,6 +90,7 @@ function ScriptMode_Init( modename, mapname )
 	SessionState.MapName <- mapname
 	SessionState.ModeName <- modename
 
+	::g_bOverrideGameHooks <- true;
 	IncludeScript( "lib_utils", getroottable() )
 	IncludeScript( "tas_kit", getroottable() )
 
