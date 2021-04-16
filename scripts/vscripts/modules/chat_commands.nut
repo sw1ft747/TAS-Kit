@@ -471,7 +471,7 @@ function SwitchRageBot_Cmd(hPlayer)
 	}
 }
 
-function AdditionalClassMethodsInjected()
+g_Hooks.AdditionalClassMethodsInjected.push(function()
 {
 	RegisterChatCommand("!rst", RestartRound);
 	RegisterChatCommand("!restart", RestartSpeedrun_Cmd);
@@ -495,4 +495,4 @@ function AdditionalClassMethodsInjected()
 	RegisterChatCommand("!aimbot", SwitchAimbot_Cmd, true);
 	RegisterChatCommand("!aimbot2", SwitchAimbot2_Cmd, true);
 	RegisterChatCommand("!ragebot", SwitchRageBot_Cmd, true);
-}
+});
