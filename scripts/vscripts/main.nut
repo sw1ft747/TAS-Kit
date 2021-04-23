@@ -39,6 +39,7 @@ Survivors["coach"] <- // make sure that the character name is in lowercase
 	Inventory =
 	{
 		active_slot = "slot1"
+		
 		slot0 = // primary weapon
 		{
 			weapon = "rifle"
@@ -47,12 +48,14 @@ Survivors["coach"] <- // make sure that the character name is in lowercase
 			upgrade_type = UPGRADE_INCENDIARY_AMMO // UPGRADE_INCENDIARY_AMMO, UPGRADE_EXPLOSIVE_AMMO or UPGRADE_LASER_SIGHT (don't apply 'upgrade_clip' if you use laser sight only)
 			upgrade_clip = 35 // 'upgrade_clip' should be less than or equal to 'clip' !!
 		}
+
 		slot1 = // secondary weapon
 		{
 			weapon = "pistol_magnum"
 			dual = false
 			clip = 5
 		}
+
 		slot2 = "pipe_bomb" // throwable
 		slot3 = "first_aid_kit" // medkit/defib
 		slot4 = "pain_pills" // pills/adrenaline
@@ -113,17 +116,17 @@ function Callbacks::OnSpeedrunRestart() // do some stuff when the speedrun is ab
 	
 }
 
-function Callbacks::OnFinaleStart() // do some stuff when a finale event has been started
+function Callbacks::OnFinaleStart() // do some stuff when the finale has been started
 {
 
 }
 
-function Callbacks::OnFinalePause() // called during pause stage of panic event in finales
+function Callbacks::OnFinalePause() // called during pause stage of panic event in the finale
 {
 	
 }
 
-function Callbacks::OnLastTankKilled() // called after killing specified amount of Tanks (CustomSpawn.Settings.MaxTanksInFinale)
+function Callbacks::OnLastTankKilled() // called after killing a specified amount of Tanks in the finale (FinaleManager.Settings.MaxTanksInFinale)
 {
 
 }
@@ -145,9 +148,11 @@ function Callbacks::OnSpitterBoostCompleted(hPlayer, hSpitter, flGainedSpeed, fl
 
 function Callbacks::OnBeginCustomStage(iNum, iType)
 {
+	local ERROR = -1;
 	local PANIC = 0;
 	local TANK = 1;
 	local DELAY = 2;
+	local SCRIPTED = 3;
 
 	if (iType == PANIC)
 	{
