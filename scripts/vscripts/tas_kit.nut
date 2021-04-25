@@ -29,7 +29,6 @@ class CScriptPluginTASKit extends IScriptPlugin
 		{
 			try {
 				RemoveHooks();
-				Callbacks.clear();
 				if (IncludeScript("main", roottable))
 				{
 					__SkipIntro();
@@ -180,10 +179,11 @@ class CScriptPluginTASKit extends IScriptPlugin
 					SayMsg("File 'main.nut' not found in the '.../scripts/vscripts' folder");
 				}
 			}
-			catch (error) {
+			catch (_error_) {
 				g_bRestarting = false;
 				SayMsg("An error has occurred while executing the script file");
 				SayMsg("Check the console for more information");
+				error(_error_ + "\n");
 			}
 		}
 
