@@ -296,13 +296,14 @@ tCB <-
 
 		if (!bIgnoreDistance)
 		{
-			if (flDistance > 1825) return false;
-			if (!g_bMapWithLongestAggressiveDistance && flDistance > 530) return false;
+			if (flDistance > 1825 || (!g_bMapWithLongestAggressiveDistance && flDistance > 530))
+				return false;
 		}
 
-		if (GetAngleBetweenEntities(hEntity, hPlayer, Vector(), true) > 75) return false;
+		if (GetAngleBetweenEntities(hEntity, hPlayer, Vector(), true) > 75)
+			return false;
 
-		flDelay += flDistance > 235 ? ((flDistance + 185) / 700) : 0.5;
+		flDelay += flDistance > 235 ? ((flDistance + 140) / 700) : 0.5;
 		NetProps.SetPropInt(hEntity, "m_nSequence", RandomInt(37, 39));
 
 		if (flDelay > 0)
@@ -782,8 +783,7 @@ function UseEntity(hPlayer, hEntity, bSetPreviousAngles = true, bSetVelocityDire
 
 		if (sClass == "upgrade_laser_sight")
 		{
-			if (hPlayer.GetActiveWeapon()) return;
-			if (g_aPrimaryWeaponList.find(hPlayer.GetActiveWeapon().GetClassname()) == null) return;
+			if (!hPlayer.GetActiveWeapon() || g_aPrimaryWeaponList.find(hPlayer.GetActiveWeapon().GetClassname()) == null) return;
 			else if (NetProps.GetPropInt(hPlayer.GetActiveWeapon(), "m_upgradeBitVec") & eUpgrade.Laser) return;
 		}
 
