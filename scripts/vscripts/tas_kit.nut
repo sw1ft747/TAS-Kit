@@ -2,7 +2,7 @@
 // TAS Kit
 // Powered by AP
 
-class CScriptPluginTASKit extends IScriptPlugin
+class CTASKit extends IScriptPlugin
 {
 	function Load()
 	{
@@ -155,6 +155,7 @@ class CScriptPluginTASKit extends IScriptPlugin
 								{
 									TP(hPlayer, vecPos, eAngles);
 								}
+
 								if (bIdle)
 								{
 									if (hPlayer.IsHost()) SendToServerConsole("go_away_from_keyboard");
@@ -234,11 +235,11 @@ class CScriptPluginTASKit extends IScriptPlugin
 	function _set(key, val) { throw null; }
 
 	static m_InterfaceVersion = 1;
-	static m_sClassName = "CScriptPluginTASKit";
+	static m_sClassName = "CTASKit";
 	static m_sScriptPluginName = "TAS Kit";
 }
 
-const __TAS_KIT_VER__ = "1.3"
+const __TAS_KIT_VER__ = "1.3.1"
 const __MAIN_PATH__ = "tas_kit/"
 
 __tEvents <- {};
@@ -248,14 +249,27 @@ g_tSegmentData <- {};
 g_flFinaleStartTime <- null;
 g_bSpeedrunStarted <- false;
 
-g_TASKit <- CScriptPluginTASKit();
+g_TASKit <- CTASKit();
 
 if (!("g_bRestarting" in this)) g_bRestarting <- false;
 if (!("g_bApplyMapParams" in this)) g_bApplyMapParams <- true;
 
+Players <-
+{
+	Coach = null
+	Ellis = null
+	Nick = null
+	Rochelle = null
+
+	Louis = null
+	Zoey = null
+	Francis = null
+	Bill = null
+};
+
 g_Timer <-
 {
-	HUD = {Fields = {}}
+	HUD = { Fields = {} }
 	previous_segment = 0.0
 	start_time = 0.0
 	time = 0.0
@@ -579,6 +593,12 @@ function Countdown(iValue)
 			bFreezeL4D1Survivors = true;
 		}
 
+		if (!FinaleManager.hTriggerFinale)
+		{
+			if (FinaleManager.hTriggerFinale = Entities.FindByClassname(null, "trigger_finale"))
+				FinaleManager.HookTriggerFinale();
+		}
+
 		while (hPlayer = Entities.FindByClassname(hPlayer, "player"))
 		{
 			if (hPlayer.IsSurvivor())
@@ -589,23 +609,21 @@ function Countdown(iValue)
 				NetProps.SetPropInt(hPlayer, "m_fFlags", NetProps.GetPropInt(hPlayer, "m_fFlags") & ~FL_FROZEN);
 				AcceptEntityInput(hPlayer, "DisableLedgeHang");
 
-				local sCharacter = GetCharacterDisplayName(hPlayer).tolower();
-				if (sCharacter in g_tSegmentData)
+				local sCharacter = GetCharacterDisplayName(hPlayer);
+				local sCharacterL = sCharacter.tolower();
+
+				if (sCharacterL in g_tSegmentData)
 				{
 					local aVars = [this, hPlayer];
-					aVars.extend(g_tSegmentData[sCharacter]);
+					aVars.extend(g_tSegmentData[sCharacterL]);
 					IssueSurvivorEquipment.acall(aVars);
 				}
+
+				Players[sCharacter] = (IsPlayerABot(hPlayer) ? GetOwner(hPlayer) : hPlayer);
 			}
 		}
 
 		g_tSegmentData.clear();
-
-		if (!FinaleManager.hTriggerFinale)
-		{
-			if (FinaleManager.hTriggerFinale = Entities.FindByClassname(null, "trigger_finale"))
-				FinaleManager.HookTriggerFinale();
-		}
 
 		if ("OnSpeedrunStart" in ::Callbacks)
 			::Callbacks.OnSpeedrunStart();
