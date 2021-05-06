@@ -21,7 +21,7 @@ if (!("g_bHostAutoBhop" in this)) g_bHostAutoBhop <- false;
 if (!("g_bAimbot" in this)) g_bAimbot <- array(MAXCLIENTS + 1, false);
 if (!("g_bAimbot2" in this)) g_bAimbot2 <- array(MAXCLIENTS + 1, false);
 if (!("g_bRagebot" in this)) g_bRagebot <- array(MAXCLIENTS + 1, false);
-if (!("g_bAutoBhop" in this)) g_bAutoBhop <- array(MAXCLIENTS + 1, true);
+if (!("g_bAutoBhop" in this)) g_bAutoBhop <- array(MAXCLIENTS + 1, false);
 
 g_sAimbotProhibitedWeapon <-
 [
