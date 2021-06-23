@@ -1,4 +1,8 @@
 # TAS Kit
+
+**USING THIS SOFTWARE YOU CANNOT CALL ANY RECORDED RUN LEGITIMATE (100% TAS)**
+**NOTE THAT SOFTWARE CHANGES THE GAME BEHAVIOUR/STATE, RANDOM SEED**
+
 VScript tools for implementing TAS in Left 4 Dead 2
 
 Note: The core of **TASK** is Library of Utils which greatly expands the possibilities in scripting
